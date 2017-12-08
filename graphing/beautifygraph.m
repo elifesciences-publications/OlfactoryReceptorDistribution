@@ -40,6 +40,7 @@ if params.changefonts
     set(params.axes, 'fontname', 'Helvetica');
     set([htitle, hxlabel, hylabel], 'fontname', 'AvantGarde');
 end
+set(params.axes, 'fontsize', 10*params.fontscale);
 set([hxlabel, hylabel], 'fontsize', 12*params.fontscale);
 set(htitle, 'fontsize', 14*params.fontscale, 'fontweight', 'bold');
 % XXX can you rescale font for tick labels?
