@@ -76,6 +76,14 @@ parser.addParameter('guesslbd', M/Ktot, @(x) isscalar(x) && isnumeric(x) && ...
 parser.addParameter('progressinterval', 10, @(x) isscalar(x) && isnumeric(x) && ...
     isreal(x) && x>=0);
 
+% handle displaying defaults
+if nargin == 1 && strcmp(Q, 'defaults')
+    disp('Available options and their defaults:');
+    parser.parse;
+    disp(parser.Results);
+    return;
+end
+
 % parse
 parser.parse(varargin{:});
 params = parser.Results;
