@@ -1,5 +1,5 @@
 function [K, info_values, Q, info_fct] = calculate_optimal_dist(S, Gamma, Ktot_values, varargin)
-% calculate_optimal_dist Calculate optimal receptor distribution given a
+% CALCULATE_OPTIMAL_DIST Calculate optimal receptor distribution given a
 % sensing matrix and an environment covariance matrix.
 %   K = CALCULATE_OPTIMAL_DIST(S, Gamma, Ktot_values) calculates the
 %   optimal receptor distribution at a series of values for `Ktot`, the
@@ -21,43 +21,99 @@ function [K, info_values, Q, info_fct] = calculate_optimal_dist(S, Gamma, Ktot_v
 %   using S and Gamma to estimate the amount of mutual information between
 %   concentrations and responses when the distribution is given by Kvals.
 %
-%   Additional parameters passed to CALCULATE_OPTIMAL_DIST are passed as
-%   options to the fmincon optimizer.
+%   Options:
+%    'method':
+%       This can be
+%           'fmincon':   use Matlab's fmincon to impose the constraint that
+%                        sum(K) is fixed at Ktot.
+%           'lagsearch': use a Lagrange multiplier to impose the constraint
+%                        on sum(K); the value of the multiplier is fixed by
+%                        a search algorithm
+%    'optimopts':
+%       Cell array or structure containing options to be passed to fmincon
+%       or fminunc for the optimization of the receptor abundances.
+%    'lagsearchopts':
+%       Cell array or structure containing options to be passed to
+%       fminunc for finding the value of the Lagrange multiplier.
+%    'lagstart'
+%       Initial value to use for Laagrange multiplier optimization.
 %
 %   See also: fmincon, optimoptions.
 
+parser = inputParser;
+parser.CaseSensitive = true;
+parser.FunctionName = mfilename;
+%parser.KeepUnmatched = true;
+
+parser.addParameter('method', 'fmincon', @(s) isvector(s) && ischar(s) && ...
+    ismember(s, {'fmincon', 'lagsearch'}));
+parser.addParameter('optimopts', {}, @(c) (iscell(c) && isvector(c)) || isstruct(c));
+parser.addParameter('lagsearchopts', {}, @(c) (iscell(c) && isvector(c)) || ...
+    isstruct(c));
+parser.addParameter('lagstart', 1e-3, @(x) isscalar(x) && isnumeric(x));
+
+% parse
+parser.parse(varargin{:});
+params = parser.Results;
+
+% setup
 [M, ~] = size(S);
-
 Q = S * Gamma * S';
-
 K = zeros(M, length(Ktot_values));
 
-options = optimoptions(@fmincon, 'Display', 'none');
-for k = 1:2:length(varargin)
-    options.(varargin{k}) = varargin{k+1};
+% handle options
+switch params.method
+    case 'fmincon'
+        optim_fct = @fmincon;
+    case 'lagsearch'
+        optim_fct = @fminunc;
 end
+optimopts = optimoptions(optim_fct);
+optimopts.Display = 'none';
+if strcmp(params.method, 'lagsearch')
+    optimopts.SpecifyObjectiveGradient = true;
+    optimopts.Algorithm = 'trust-region';
+end
+if iscell(params.optimopts)
+    optimopts = optimoptions(optimopts, params.optimopts{:});
+else
+    optimopts = optimoptions(optimopts, params.optimopts);
+end
+
+lagsearchopts = optimoptions('fsolve');
+lagsearchopts.Display = 'none';
+if iscell(params.lagsearchopts)
+    lagsearchopts = optimoptions(lagsearchopts, params.lagsearchopts{:});
+else
+    lagsearchopts = optimoptions(lagsearchopts, params.lagsearchopts);
+end
+
+% perform the optimization
 ident = eye(size(Q));
 for i = 1:length(Ktot_values)
     crtK = Ktot_values(i);
     if crtK == 0
         continue;
     end
-    options.TypicalX = ones(1, M)*(crtK/M);
-    [Koptim, ~, exit_flag, output] = fmincon(...
-        @(Khat) -0.5*log(det(ident + diag(Khat)*Q)), ...
-        ones(1, M)*(crtK/M), ...
-        [], [], ...
-        ones(1, M), crtK, ...
-        zeros(1, M), inf(1, M), ...
-        [], ...
-        options); %#ok<ASGLU>
+    optimopts.TypicalX = ones(1, M)*(crtK/M);
+    if strcmp(params.method, 'fmincon')
+        [Koptim, ~, exit_flag, output] = fmincon(...
+            @(Khat) -0.5*log(det(ident + diag(Khat)*Q)), ...
+            ones(1, M)*(crtK/M), ...
+            [], [], ...
+            ones(1, M), crtK, ...
+            zeros(1, M), inf(1, M), ...
+            [], ...
+            optimopts); %#ok<ASGLU>
+    elseif strcmp(params.method, 'lagsearch')
+        lbd_optim = fsolve(@(lbd) ...
+            sum(getKunc(lbd, M, crtK, Q, optimopts)) - crtK, params.lagstart, ...
+            lagsearchopts);
+        Koptim = getKunc(lbd_optim, M, crtK, Q, optimopts);
+    end
 
     Koptim(Koptim < eps) = 0; % eliminate rounding errors
     K(:, i) = Koptim;
-    
-%    disp(['Step ' int2str(i)]);
-%    disp(exit_flag);
-%    disp(output);
 end
 
 % don't calculate the information values if they're never used
@@ -71,5 +127,30 @@ if nargin > 1
         end
     end
 end
+
+end
+
+function Kunc = getKunc(lbd, M, Ktot, Q, optimopts)
+
+ident = eye(size(Q));
+
+    function [I, dI] = neg_info_fct(sqrtKvals)
+        Kvals = sqrtKvals(:).^2;
+        shrunk = ident + diag(Kvals)*Q;
+        I = 0.5*lbd*sum(Kvals) - 0.5*log(det(shrunk));
+%         dI = Kvals.*(lbd - diag(Q/shrunk));
+        dI = 2*sqrtKvals(:).*(lbd - diag(Q/shrunk));
+    end
+
+% info_fct = @(logKvals) 0.5*log(det(ident + diag(exp(logKvals))*Q)) ...
+%     - 0.5*lbd*sum(exp(logKvals));
+% [logKoptim, info_value, exit_flag, output] = fminunc(@neg_info_fct, ...
+%     log(ones(1, M)*(Ktot/M)), optimopts); %#ok<ASGLU>
+% Kunc = exp(logKoptim);
+[sqrtKoptim, info_value, exit_flag, output] = fminunc(@neg_info_fct, ...
+    sqrt(ones(1, M)*(Ktot/M)), optimopts); %#ok<ASGLU>
+Kunc = sqrtKoptim.^2;
+
+% disp(['lbd=' num2str(lbd) ', sum(K)=' num2str(sum(Kunc))]);
 
 end
