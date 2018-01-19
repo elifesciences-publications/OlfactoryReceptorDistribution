@@ -61,7 +61,7 @@ end
 xlim([0 K_scaling*Ktot_values(idx_max)]);
 ylim([0 K_scaling*Ktot_values(idx_max)]);
 
-xlh = xlabel('OSN number');
+xlh = xlabel('Number of OSNs');
 xlh.Units = 'characters';
 xlh.Position(2) = xlh.Position(2) - 0.2;
 ylabel('OSNs by receptor type');
@@ -95,7 +95,7 @@ hold on;
 xlim([0 K_scaling*Ktot_values(end)]);
 ylim([0 K_scaling*Ktot_values(end)]);
 
-xlabel('OSN number');
+xlabel('Number of OSNs');
 ylabel('OSNs by receptor type');
 % find out which receptors we've displayed, and in what order they appeared
 % rec_dispd = rec_order(minK_ordered <= idx_max);
@@ -130,7 +130,7 @@ for i = 1:length(minK_ordered)
     rectype_count(minK_ordered(i):end) = rectype_count(minK_ordered(i):end) + 1;
 end
 semilogx(K_scaling*Ktot_values, rectype_count, 'linewidth', 1);
-xlabel('OSN number');
+xlabel('Number of OSNs');
 ylabel('Active receptor types');
 xlim([K_scaling*Ktot_values(2), K_scaling*Ktot_values(end)]);
 ylim([0 M+1]);
