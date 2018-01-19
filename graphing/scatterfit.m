@@ -22,7 +22,6 @@ function [c, stats, handles] = scatterfit(x, y, varargin)
 parser = inputParser;
 parser.CaseSensitive = true;
 parser.FunctionName = mfilename;
-parser.KeepUnmatched = true;
 
 parser.addParameter('scatteropts', {}, @(c) iscell(c) && isvector(c));
 parser.addParameter('fitopts', {}, @(c) iscell(c) && isvector(c));
