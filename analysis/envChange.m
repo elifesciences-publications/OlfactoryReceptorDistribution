@@ -1154,8 +1154,9 @@ mouse_with_errorbars.Q1 = cell_empty;
 mouse_with_errorbars.Q2 = cell_empty;
 
 % set perturbation amounts
-mouse_with_errorbars.perturbation_sizes.Gamma = 0.01;
-mouse_with_errorbars.perturbation_sizes.S = 0.05;
+mouse_with_errorbars.perturbation_sizes.Gamma = 0.02;
+% mouse_with_errorbars.perturbation_sizes.S = 0.05;
+mouse_with_errorbars.perturbation_sizes.S = 0;
 mouse_with_errorbars.perturbation_sizes.Ktot = 0;
 
 % start calculating the perturbations and how they affect the optimal
@@ -1270,7 +1271,8 @@ errorbar(mouse_with_errorbars.summary.K1_mean, logK_ratio, logK_std, logK_std, .
 hold on;
 plot(mouse_with_errorbars.summary.K1_mean, logK_ratio, '.', 'markersize', 10);
 
-ylim([-3.5, 3.5]);
+% ylim([-3.5, 3.5]);
+ylim([-2.5, 2.5]);
 set(gca, 'xscale', 'log');
 % xlim([5, 350]);
 % xlim([1 max(K1p_mean)*1.2]);
@@ -1610,6 +1612,176 @@ end
 
 start_sensitivity.summary.Kdiff_mean = mean(start_sensitivity.Kdiff, 2);
 start_sensitivity.summary.Kdiff_std = std(start_sensitivity.Kdiff, [], 2);
+
+%% Logic (correlation with Q, inv(Q)) as a function of Ktot
+
+% random environments and sensing matrices, but make them reproducible
+rng(3498);
+
+logic_vs_tuning.Gamma = generate_environment('rnd_corr', size(S_fly, 2), 'corrbeta', 50);
+
+% choose range for the total number of neurons
+logic_vs_tuning.Ktot = logspace(log10(1), log10(40000), 50);
+
+logic_vs_tuning.S = S_fly;
+logic_vs_tuning.sigma = sigma_fly;
+
+cell_empty = cell(1, length(logic_vs_tuning.Ktot));
+logic_vs_tuning.K = cell_empty;
+logic_vs_tuning.Q = cell_empty;
+
+tic;
+normalize_to_S_wide_legacy = @(S) S*norm(S_wide_legacy)/norm(S);
+for i = 1:length(logic_vs_tuning.Ktot)
+    disp([int2str(i) '/' int2str(length(logic_vs_tuning.Ktot)) '...']);
+    % get the optimal distribution
+    [logic_vs_tuning.K{i}, ~, logic_vs_tuning.Q{i}] = ...
+        calculate_optimal_dist(logic_vs_tuning.S/logic_vs_tuning.sigma, ...
+        logic_vs_tuning.Gamma, logic_vs_tuning.Ktot(i), ...
+        optim_args_nodisp{:});
+end
+disp(['Generating logic vs. tuning width sweep took ' num2str(toc, '%.2f') ' seconds.']);
+
+%% ... calculate correlation coefficients
+
+zero_empty = zeros(length(logic_vs_tuning.Ktot), 1);
+logic_vs_tuning.corrs = struct;
+logic_vs_tuning.corrs.cs_Q_abs = zero_empty;
+logic_vs_tuning.corrs.cp_Q_abs = zero_empty;
+
+logic_vs_tuning.corrs.cs_logQ_abs = zero_empty;
+logic_vs_tuning.corrs.cp_logQ_abs = zero_empty;
+
+logic_vs_tuning.corrs.cs_invQ_abs = zero_empty;
+logic_vs_tuning.corrs.cp_invQ_abs = zero_empty;
+
+logic_vs_tuning.corrs.cs_invQpred_abs = zero_empty;
+logic_vs_tuning.corrs.cp_invQpred_abs = zero_empty;
+
+for i = 1:length(logic_vs_tuning.Ktot)
+    disp([int2str(i) '/' int2str(length(logic_vs_tuning.Ktot)) '...']);
+    crt_Q = logic_vs_tuning.Q{i};
+    crt_K = logic_vs_tuning.K{i};
+    
+    % correlation with diagonal elements of Q
+    logic_vs_tuning.corrs.cs_Q_abs(i) = corr(...
+        diag(crt_Q), crt_K, 'type', 'spearman');
+    logic_vs_tuning.corrs.cp_Q_abs(i) = corr(...
+        diag(crt_Q), crt_K);
+    
+    % after taking the log
+    logic_vs_tuning.corrs.cs_logQ_abs(i) = corr(...
+        log(diag(crt_Q)), crt_K, 'type', 'spearman');
+    logic_vs_tuning.corrs.cp_logQ_abs(i) = corr(...
+        log(diag(crt_Q)), crt_K);
+    
+    crt_invQ = inv(crt_Q);
+    
+    % correlation with diagonal elements of inv(Q)
+    logic_vs_tuning.corrs.cs_invQ_abs(i) = corr(...
+        diag(crt_invQ), crt_K, 'type', 'spearman');
+    logic_vs_tuning.corrs.cp_invQ_abs(i) = corr(...
+        diag(crt_invQ), crt_K);
+    
+    crt_invQpred = max(...
+        logic_vs_tuning.Ktot(i) / size(logic_vs_tuning.S, 1) + ...
+        mean(diag(crt_invQ)) - diag(crt_invQ), 0);
+    
+    % correlation with clipped version of diagonal elements of inv(Q)
+    logic_vs_tuning.corrs.cs_invQpred_abs(i) = corr(...
+        crt_invQpred, crt_K, 'type', 'spearman');
+    logic_vs_tuning.corrs.cp_invQpred_abs(i) = corr(...
+        crt_invQpred, crt_K);
+end
+% 
+% % summarize (calculate means, standard deviations, etc.)
+% fields = fieldnames(logic_vs_tuning.corrs);
+% for i = 1:length(fields)
+%     crt_corrs = logic_vs_tuning.corrs.(fields{i});
+%     
+%     logic_vs_tuning.corrs.summary.([fields{i} '_mean']) = ...
+%         mean(crt_corrs, 1);
+%     logic_vs_tuning.corrs.summary.([fields{i} '_median']) = ...
+%         median(crt_corrs, 1);
+% 
+%     logic_vs_tuning.corrs.summary.([fields{i} '_std']) = ...
+%         std(crt_corrs, [], 1);
+%     
+%     logic_vs_tuning.corrs.summary.([fields{i} '_low']) = ...
+%         quantile(crt_corrs, 0.2, 1);
+%     logic_vs_tuning.corrs.summary.([fields{i} '_high']) = ...
+%         quantile(crt_corrs, 0.8, 1);
+% end
+
+%% ... show how well log(diag(Q)) and diag(inv(Q)) predict receptor distribution
+
+fig = figure;
+fig.Units = 'inches';
+fig.Position = [fig.Position(1:2) 3 1.8];
+
+ax = axes;
+ax.OuterPosition = [0 0 0.5 1];
+
+% fill([flipud(logic_vs_tuning.Ktot(:)) ; logic_vs_tuning.Ktot(:)], ...
+%     [flipud(logic_vs_tuning.corrs.summary.cp_logQ_abs_low(:)) ; ...
+%         logic_vs_tuning.corrs.summary.cp_logQ_abs_high(:)], ...
+%     [0.9 0.9 0.9], 'linestyle', 'none');
+% hold on;
+% plot(logic_vs_tuning.Ktot, ...
+%     logic_vs_tuning.corrs.summary.cp_logQ_abs_mean, 'linewidth', 1);
+plot(logic_vs_tuning.Ktot, logic_vs_tuning.corrs.cp_logQ_abs, 'linewidth', 1);
+
+Ktot_min_max = [min(logic_vs_tuning.Ktot) max(logic_vs_tuning.Ktot)];
+xlim(Ktot_min_max);
+fixed_y_lim = [-0.1 1];
+ylim(fixed_y_lim);
+
+% set(gca, 'xtick', logic_vs_tuning.Ktot, 'xticklabel', {'low SNR', 'high SNR'}, ...
+%     'xscale', 'log');
+set(gca, 'xscale', 'log');
+% xlabel('Signal-to-noise ratio');
+xlabel('K_{tot}');
+ylabel('corr(log Q_{aa}, K_a)');
+
+hold on;
+plot(xlim, [0 0], 'k:');
+
+beautifygraph('fontscale', 0.833);
+
+ax = axes;
+ax.OuterPosition = [0.5 0 0.5 1];
+
+% fill([flipud(logic_vs_tuning.Ktot(:)) ; logic_vs_tuning.Ktot(:)], ...
+%     -[flipud(logic_vs_tuning.corrs.summary.cp_invQ_abs_low(:)) ; ...
+%         logic_vs_tuning.corrs.summary.cp_invQ_abs_high(:)], ...
+%     [0.9 0.9 0.9], 'linestyle', 'none');
+% hold on;
+% plot(logic_vs_tuning.Ktot, ...
+%     -logic_vs_tuning.corrs.summary.cp_invQ_abs_mean, 'linewidth', 1);
+% plot(logic_vs_tuning.Ktot, -logic_vs_tuning.corrs.cp_invQ_abs, 'linewidth', 1);
+plot(logic_vs_tuning.Ktot, logic_vs_tuning.corrs.cp_invQpred_abs, 'linewidth', 1);
+
+Ktot_min_max = [min(logic_vs_tuning.Ktot) max(logic_vs_tuning.Ktot)];
+xlim(Ktot_min_max);
+ylim(fixed_y_lim);
+
+% set(gca, 'xtick', Ktot_min_max, 'xticklabel', {'low SNR', 'high SNR'}, ...
+%     'xscale', 'log');
+set(gca, 'xscale', 'log');
+% xlabel('Signal-to-noise ratio');
+xlabel('K_{tot}');
+ylabel('clipped corr(-Q^{-1}_{aa}, K_a)');
+
+hold on;
+plot(xlim, [0 0], 'k:');
+
+beautifygraph('fontscale', 0.833);
+preparegraph;
+
+% safe_print(fullfile('figs', 'logic_vs_Ktot.pdf'));
+
+
+
 
 
 
