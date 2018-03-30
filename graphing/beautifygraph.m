@@ -17,16 +17,14 @@ function beautifygraph(varargin)
 % This function is based on the suggestions given at
 % blogs.mathworks.com/loren/2007/12/11/making-pretty-graphs
 
-% Tiberiu Tesileanu (2013-2014)
-
 % parse the optional arguments that scattefit cares about
 parser = inputParser;
 parser.CaseSensitive = true;
 parser.FunctionName = mfilename;
 
 parser.addOptional('axes', gca);
-parser.addParamValue('fontscale', 1, @(x) isscalar(x) && isnumeric(x));
-parser.addParamValue('changefonts', false, @(b) isscalar(b) && islogical(b));
+parser.addParameter('fontscale', 1, @(x) isscalar(x) && isnumeric(x));
+parser.addParameter('changefonts', false, @(b) isscalar(b) && islogical(b));
 
 % parse
 parser.parse(varargin{:});
