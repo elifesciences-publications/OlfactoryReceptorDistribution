@@ -28,6 +28,7 @@ optim_args = {'optimopts', optim_options, 'method', 'lagsearch'};
 
 % generate colormap for covariance matrix plots
 cmap_covmat = divergent([0.21 0.17 0.53], [0.98 0.40 0.17], 256);
+% cmap_covmat = divergent([0.21 0.17 0.53], [0.83 0.73 0.35], 256);
 
 %% Generating artificial sensing matrices
 
@@ -72,7 +73,7 @@ fig.Position = [fig.Position(1:2) 5.8 2];
 ax1 = axes;
 ax1.Units = 'normalized';
 ax1.OuterPosition = [1/2 0 1/2 1];
-plotDistChange(K1_example(:, 1), K2_example(:, 1), 'beautifyopts', {'fontscale', 0.833});
+plotDistChange(K1_example(:, 1), K2_example(:, 1), 'beautifyopts', {'fontscale', 0.667});
 ylim([0 0.08]);
 title('Low SNR');
 
@@ -81,7 +82,7 @@ title('Low SNR');
 ax2 = axes;
 ax2.Units = 'normalized';
 ax2.OuterPosition = [0 0 1/2 1];
-plotDistChange(K1_example(:, 2), K2_example(:, 2), 'beautifyopts', {'fontscale', 0.833});
+plotDistChange(K1_example(:, 2), K2_example(:, 2), 'beautifyopts', {'fontscale', 0.667});
 ylim([0 0.08]);
 title('High SNR');
 
@@ -197,7 +198,7 @@ plot([box_start box_start box_end box_end box_start], ...
 plot([box_start box_start box_end box_end box_start], ...
      [box_start box_end box_end box_start box_start], 'k');
 
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 
 axis equal;
 set(gca, 'xtick', [], 'ytick', [], 'box', 'on');
@@ -397,7 +398,7 @@ end
 
 fig = figure;
 fig.Units = 'inches';
-fig.Position = [fig.Position(1:2) 3 1.8];
+fig.Position = [fig.Position(1:2) 3.5 1.3];
 
 ax = axes;
 ax.OuterPosition = [0 0 0.5 1];
@@ -423,7 +424,7 @@ ylabel('corr(log Q_{aa}, K_a)');
 
 plot(xlim, [0 0], 'k:');
 
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 
 ax = axes;
 ax.OuterPosition = [0.5 0 0.5 1];
@@ -448,7 +449,7 @@ ylabel('corr(-Q^{-1}_{aa}, K_a)');
 
 plot(xlim, [0 0], 'k:');
 
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 preparegraph;
 
 safe_print(fullfile('figs', 'logic_vs_tuning.pdf'));
@@ -517,7 +518,7 @@ safe_print(fullfile('figs', 'logic_vs_tuning_envchange.pdf'));
 
 fig = figure;
 fig.Units = 'inches';
-fig.Position = [fig.Position(1:2) 2.9 2];
+fig.Position = [fig.Position(1:2) 2.4 1.4];
 
 idx_rep = 1;
 idx_tuning = 48;
@@ -538,7 +539,7 @@ scatterfit(crt_invQd, crt_K, 'scatteropts', {60, 'filled'}, 'fitopts', ...
 xlabel('(Q^{-1})_{aa}');
 ylabel('K_a');
 
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 preparegraph;
 
 safe_print(fullfile('figs', 'K_vs_invQ.pdf'));
@@ -673,85 +674,99 @@ gRng_all = max(gRng, gRng_no);
 
 fig = figure;
 fig.Units = 'inches';
-fig.Position = [fig.Position(1:2) 5.8 2.6];
+fig.Position = [fig.Position(1:2) 6.0 1.45];
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [0.05 0.35 0.2 0.65];
+ax.OuterPosition = [0 0.83 0.5 0.1];
+axis off;
+title('Generic environments', 'fontsize', 10);
+
+ax = axes;
+ax.Units = 'normalized';
+ax.OuterPosition = [0.5 0.83 0.5 0.1];
+axis off;
+title('Non-overlapping environments', 'fontsize', 10);
+
+ax = axes;
+ax.Units = 'normalized';
+ax.OuterPosition = [0 0 0.21 0.9];
 plotMatrix(Gamma1_generic, [-gRng_all gRng_all]);
 colormap(cmap_covmat);
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 %colorbar;
 axis equal;
 set(ax, 'xtick', [], 'ytick', [], 'box', 'on');
 xlabel('odorant 1');
 ylabel('odorant 2');
-title('Env. 1', 'fontsize', 10);
+title('Env. 1', 'fontsize', 9);
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [0.25 0.35 0.2 0.65];
+ax.OuterPosition = [0.19 0 0.21 0.9];
 plotMatrix(Gamma2_generic, [-gRng_all gRng_all]);
 colormap(cmap_covmat);
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 %colorbar;
 axis equal;
 set(ax, 'xtick', [], 'ytick', [], 'box', 'on');
 xlabel('odorant 1');
 % ylabel('odorant 2');
 ylabel(' ');
-title('Env. 2', 'fontsize', 10);
+title('Env. 2', 'fontsize', 9);
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [0.55 0.35 0.2 0.65];
+ax.OuterPosition = [0.5 0 0.21 0.9];
 plotMatrix(Gamma1_nonoverlapping, [-gRng_all gRng_all]);
 colormap(cmap_covmat);
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 %colorbar;
 axis equal;
 set(ax, 'xtick', [], 'ytick', [], 'box', 'on');
 xlabel('odorant 1');
 ylabel('odorant 2');
-title('Env. 1', 'fontsize', 10);
+title('Env. 1', 'fontsize', 9);
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [0.75 0.35 0.2 0.65];
+ax.OuterPosition = [0.7 0 0.21 0.9];
 plotMatrix(Gamma2_nonoverlapping, [-gRng_all gRng_all]);
 colormap(cmap_covmat);
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 %colorbar;
 axis equal;
 set(ax, 'xtick', [], 'ytick', [], 'box', 'on');
 xlabel('odorant 1');
 % ylabel('odorant 2');
 ylabel(' ');
-title('Env. 2', 'fontsize', 10);
+title('Env. 2', 'fontsize', 9);
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [0 0 1/2 0.4];
+ax.OuterPosition = [0.39 0.03 0.09 0.81];
 % yl = max(abs([K1(:) - K2(:) ; K1b(:) - K2b(:)])) / Ktot;
 yl = 0.06;
-plotDistChange(K1_generic, K2_generic, 'method', 'bar', 'receptornames', datafile.orNames);
-ylim([-yl yl]);
+plotDistChange(K1_generic, K2_generic, 'method', 'barh', 'receptornames', datafile.orNames, ...
+    'axfontsize', 4, 'labelrot', 30);
+xlim([-yl yl]);
 hold on;
-plot(xlim, [0 0], 'k', 'linewidth', 0.25);
-set(ax, 'ycolor', 'none');
-title('Generic environments', 'fontsize', 10);
-text(-1.5, 0, '\Delta K_a', 'rotation', 90, 'horizontalalignment', 'center');
+plot([0, 0], ylim, 'k', 'linewidth', 0.25);
+set(ax, 'xcolor', 'none');
+% title('Generic environments', 'fontsize', 10);
+text(0, -2.1, '\Delta K_a', 'horizontalalignment', 'center', 'fontsize', 8);
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [1/2 0 1/2 0.4];
-plotDistChange(K1_nonoverlapping, K2_nonoverlapping, 'method', 'bar', 'receptornames', datafile.orNames);
-ylim([-yl yl]);
+ax.OuterPosition = [0.9 0.03 0.09 0.81];
+plotDistChange(K1_nonoverlapping, K2_nonoverlapping, 'method', 'barh', 'receptornames', datafile.orNames, ...
+    'axfontsize', 4, 'labelrot', 30);
+xlim([-yl yl]);
 hold on;
-plot(xlim, [0 0], 'k', 'linewidth', 0.25);
-set(ax, 'ycolor', 'none');
-title('Non-overlapping environments', 'fontsize', 10);
-text(-1.5, 0, '\Delta K_a', 'rotation', 90, 'horizontalalignment', 'center');
+plot([0, 0], ylim, 'k', 'linewidth', 0.25);
+set(ax, 'xcolor', 'none');
+% title('Non-overlapping environments', 'fontsize', 10);
+text(0, -2.1, '\Delta K_a', 'horizontalalignment', 'center', 'fontsize', 8);
 
 preparegraph('edge', 0);
 
@@ -931,7 +946,7 @@ for i = 1:length(map_keys)
     safe_print(fullfile('figs', 'tuning_figs', [crt_name '.pdf']));
 end
 
-%% ... make plots for random change vs. non-overlapping
+%% ... make plots for narrow vs. wide tuning
 
 % rng_perc = 0.95;
 rng_perc = 0.9965;
@@ -939,85 +954,99 @@ gRng_all = quantile([abs(Gamma1_generic(:)) ; abs(Gamma2_generic(:))], rng_perc)
 
 fig = figure;
 fig.Units = 'inches';
-fig.Position = [fig.Position(1:2) 5.8 2.6];
+fig.Position = [fig.Position(1:2) 6.0 1.45];
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [0.05 0.35 0.2 0.65];
+ax.OuterPosition = [0 0.83 0.5 0.1];
+axis off;
+title('Narrow tuning', 'fontsize', 10);
+
+ax = axes;
+ax.Units = 'normalized';
+ax.OuterPosition = [0.5 0.83 0.5 0.1];
+axis off;
+title('Wide tuning', 'fontsize', 10);
+
+ax = axes;
+ax.Units = 'normalized';
+ax.OuterPosition = [0 0 0.21 0.9];
 plotMatrix(Gamma1_generic, [-gRng_all gRng_all]);
 colormap(cmap_covmat);
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 %colorbar;
 axis equal;
 set(ax, 'xtick', [], 'ytick', [], 'box', 'on');
 xlabel('odorant 1');
 ylabel('odorant 2');
-title('Env. 1', 'fontsize', 10);
+title('Env. 1', 'fontsize', 9);
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [0.25 0.35 0.2 0.65];
+ax.OuterPosition = [0.19 0 0.21 0.9];
 plotMatrix(Gamma2_generic, [-gRng_all gRng_all]);
 colormap(cmap_covmat);
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 %colorbar;
 axis equal;
 set(ax, 'xtick', [], 'ytick', [], 'box', 'on');
 xlabel('odorant 1');
 % ylabel('odorant 2');
 ylabel(' ');
-title('Env. 2', 'fontsize', 10);
+title('Env. 2', 'fontsize', 9);
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [0.55 0.35 0.2 0.65];
+ax.OuterPosition = [0.5 0 0.21 0.9];
 plotMatrix(Gamma1_generic, [-gRng_all gRng_all]);
 colormap(cmap_covmat);
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 %colorbar;
 axis equal;
 set(ax, 'xtick', [], 'ytick', [], 'box', 'on');
 xlabel('odorant 1');
 ylabel('odorant 2');
-title('Env. 1', 'fontsize', 10);
+title('Env. 1', 'fontsize', 9);
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [0.75 0.35 0.2 0.65];
+ax.OuterPosition = [0.7 0 0.21 0.9];
 plotMatrix(Gamma2_generic, [-gRng_all gRng_all]);
 colormap(cmap_covmat);
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 %colorbar;
 axis equal;
 set(ax, 'xtick', [], 'ytick', [], 'box', 'on');
 xlabel('odorant 1');
 % ylabel('odorant 2');
 ylabel(' ');
-title('Env. 2', 'fontsize', 10);
+title('Env. 2', 'fontsize', 9);
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [0 0 1/2 0.4];
+ax.OuterPosition = [0.39 0.03 0.09 0.81];
 % yl = max(abs([K1g_narrow(:) - K2g_narrow(:) ; K1g_wide(:) - K2g_wide(:)])) / Ktot;
 yl = 0.06;
-plotDistChange(K1_generic_narrow, K2_generic_narrow, 'method', 'bar', 'receptornames', datafile.orNames);
-ylim([-yl yl]);
+plotDistChange(K1_generic_narrow, K2_generic_narrow, 'method', 'barh', 'receptornames', datafile.orNames, ...
+    'axfontsize', 4, 'labelrot', 30);
+xlim([-yl yl]);
 hold on;
-plot(xlim, [0 0], 'k', 'linewidth', 0.25);
-set(ax, 'ycolor', 'none');
-title('Narrow tuning', 'fontsize', 10);
-text(-1.5, 0, '\Delta K_a', 'rotation', 90, 'horizontalalignment', 'center');
+plot([0, 0], ylim, 'k', 'linewidth', 0.25);
+set(ax, 'xcolor', 'none');
+% title('Narrow tuning', 'fontsize', 10);
+text(0, -2.1, '\Delta K_a', 'horizontalalignment', 'center', 'fontsize', 8);
 
 ax = axes;
 ax.Units = 'normalized';
-ax.OuterPosition = [1/2 0 1/2 0.4];
-plotDistChange(K1_generic_wide, K2_generic_wide, 'method', 'bar', 'receptornames', datafile.orNames);
-ylim([-yl yl]);
+ax.OuterPosition = [0.9 0.03 0.09 0.81];
+plotDistChange(K1_generic_wide, K2_generic_wide, 'method', 'barh', 'receptornames', datafile.orNames, ...
+    'axfontsize', 4, 'labelrot', 30);
+xlim([-yl yl]);
 hold on;
-plot(xlim, [0 0], 'k', 'linewidth', 0.25);
-set(ax, 'ycolor', 'none');
-title('Wide tuning', 'fontsize', 10);
-text(-1.5, 0, '\Delta K_a', 'rotation', 90, 'horizontalalignment', 'center');
+plot([0, 0], ylim, 'k', 'linewidth', 0.25);
+set(ax, 'xcolor', 'none');
+% title('Wide tuning', 'fontsize', 10);
+text(0, -2.1, '\Delta K_a', 'horizontalalignment', 'center', 'fontsize', 8);
 
 preparegraph('edge', 0);
 
@@ -1283,7 +1312,7 @@ set(h, 'color', [1 0 0 0.3], 'linewidth', 1);
 xlabel('K^{env1}');
 ylabel('log_2 K^{env2}/K^{env1}');
 
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 
 set(gca, 'box', 'on', 'xminortick', 'off', 'yminortick', 'off', 'TickLength', [0 0]);
 
@@ -1326,8 +1355,8 @@ Kini_dynmodel_random = Kini_dynmodel_random*Ktot_dynmodel/sum(Kini_dynmodel_rand
 % learning rate chosen so that exponential growth has doubling time 2
 [~, dyn_history_from_random] = run_dyn_model(Q2_dynmodel, Ktot_dynmodel, ...
     'guessK', Kini_dynmodel_random, 'tolinfo', 0, 'tolK', 0, ...
-    'maxsteps', n_steps, 'guesslbd', 0.01679, 'ratelbd', 1e-8, ...
-    'rate', log(2)/2);
+    'maxsteps', n_steps, 'guesslbd', 0.01759, 'ratelbd', 1e-8, ...
+    'rate', log(2)/2); % guesslbd used to be 0.01679
 
 % initial receptor abundances set to optimum for environment 1, plus random
 % jitter
@@ -1338,7 +1367,7 @@ Kini_dynmodel_env1 = abs(K1_infomax_for_dynmodel + ...
 Kini_dynmodel_env1 = Kini_dynmodel_env1*Ktot_dynmodel/sum(Kini_dynmodel_env1);
 [~, dyn_history_from_env1] = run_dyn_model(Q2_dynmodel, Ktot_dynmodel, ...
     'guessK', Kini_dynmodel_env1, 'tolinfo', 0, 'tolK', 0, ...
-    'maxsteps', n_steps, 'guesslbd', 0.01679, 'ratelbd', 1e-8, ...
+    'maxsteps', n_steps, 'guesslbd', 0.01759, 'ratelbd', 1e-8, ...
     'rate', log(2)/2);
 
 % plot the dynamical evolution of receptor abundances
@@ -1375,7 +1404,7 @@ ylabel('K_a');
 xlim([0 round(n_steps*1.1)]);
 ylim([0 yl]);
 
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 
 % sanity check: how far are we from maximum info
 disp('Random starting point');
@@ -1408,7 +1437,7 @@ ylabel('K_a');
 xlim([0 round(n_steps*1.1)]);
 ylim([0 yl]);
 
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 
 % sanity check: how far are we from maximum info
 disp('Starting from optimum for different environment');
@@ -1780,9 +1809,172 @@ preparegraph;
 
 % safe_print(fullfile('figs', 'logic_vs_Ktot.pdf'));
 
+%% Save environment matrix plots one by one
+
+env_matrices = {{'env_generic1', Gamma1_generic}, {'env_generic2', Gamma2_generic}, ...
+    {'env_noverlap1', Gamma1_nonoverlapping}, {'env_noverlap2', Gamma2_nonoverlapping}};
+
+env_color_lim = 0.435;
+
+for i = 1:length(env_matrices)
+    crt_mat = env_matrices{i}{2};
+    
+    fig = figure;
+    
+    ax = axes;
+    ax.Units = 'pixels';
+    ax.Position = [ax.Position(1:2) fliplr(size(crt_mat))];
+    
+    plotMatrix(crt_mat, [-env_color_lim env_color_lim]);
+    colormap(cmap_covmat);
+    
+    beautifygraph('fontscale', 0.667);
+    preparegraph;
+
+    axis equal;
+    set(ax, 'xtick', [], 'ytick', [], 'box', 'on');
+        
+    fig.Units = 'pixels';
+    fig.Position = [fig.Position(1:2) ax.OuterPosition(3:4)];
+    
+    crt_frame = getframe;
+    
+%     safe_print(fullfile('figs', env_matrices{i}{1}), 'png', '-r0');
+     imwrite(crt_frame.cdata, fullfile('figs', [env_matrices{i}{1} '.png']));
+end
+
+%% Save wide and narrow sensing matrices
+
+sensing_matrices = {{'sensing_narrow', S_narrow}, {'sensing_wide', S_wide}};
+
+sensing_color_lim = 250;
+
+for i = 1:length(sensing_matrices)
+    crt_mat = sensing_matrices{i}{2};
+    
+    fig = figure;
+    fig.Units = 'pixels';
+    fig.Position = [fig.Position(1:2) 2.5*fliplr(size(crt_mat))];
+    
+    ax = axes;
+    axis equal;
+    
+    ax.Units = 'pixels';
+    ax.Position = [ax.Position(1:2) 2*fliplr(size(crt_mat))];
+    
+    plotMatrix(crt_mat, [-sensing_color_lim sensing_color_lim]);
+    colormap(cmap_covmat);
+    
+    beautifygraph('fontscale', 0.667);
+
+    set(ax, 'xtick', [], 'ytick', [], 'box', 'on');
+        
+    fig.Units = 'pixels';
+    fig.Position = [fig.Position(1:2) ax.OuterPosition(3:4)];
+    
+    crt_frame = getframe;
+    
+    imwrite(crt_frame.cdata, fullfile('figs', [sensing_matrices{i}{1} '.png']));
+end
+
+
+%% Plot distribution changes one by one
+
+dist_plots = {{'env_change_with_overlap', K1_generic, K2_generic}, ...
+    {'env_change_no_overlap', K1_nonoverlapping, K2_nonoverlapping}, ...
+    {'env_change_narrow_tuning', K1_generic_narrow, K2_generic_narrow}, ...
+    {'env_change_wide_tuning', K1_generic_wide, K2_generic_wide}};
+
+dist_lim = 0.06;
+
+for i = 1:length(dist_plots)
+    crt_K1 = dist_plots{i}{2};
+    crt_K2 = dist_plots{i}{3};
+    
+    fig = figure;
+    fig.Units = 'inches';
+    fig.Position = [fig.Position(1:2) 3 0.8];
+    
+    ax = axes;
+    
+    plotDistChange(crt_K1, crt_K2, 'method', 'bar', 'receptornames', datafile.orNames, ...
+        'labelrot', 60);
+    ylim([-dist_lim dist_lim]);
+    hold on;
+    plot(xlim, [0, 0], 'k', 'linewidth', 0.25);
+    set(ax, 'ycolor', 'none');
+
+    text(-1.8, 0, '\Delta K_a', 'horizontalalignment', 'center', 'fontsize', 8);
+    
+    preparegraph('edge', 0);
+    
+    safe_print(fullfile('figs', dist_plots{i}{1}));
+end
+
+%%
+
+
+ax = axes;
+ax.Units = 'normalized';
+ax.OuterPosition = [0.39 0.03 0.09 0.81];
+% yl = max(abs([K1(:) - K2(:) ; K1b(:) - K2b(:)])) / Ktot;
+yl = 0.06;
+plotDistChange(K1_generic, K2_generic, 'method', 'barh', 'receptornames', datafile.orNames, ...
+    'axfontsize', 4, 'labelrot', 30);
+xlim([-yl yl]);
+hold on;
+plot([0, 0], ylim, 'k', 'linewidth', 0.25);
+set(ax, 'xcolor', 'none');
+% title('Generic environments', 'fontsize', 10);
+text(0, -2.1, '\Delta K_a', 'horizontalalignment', 'center', 'fontsize', 8);
+
+ax = axes;
+ax.Units = 'normalized';
+ax.OuterPosition = [0.9 0.03 0.09 0.81];
+plotDistChange(K1_nonoverlapping, K2_nonoverlapping, 'method', 'barh', 'receptornames', datafile.orNames, ...
+    'axfontsize', 4, 'labelrot', 30);
+xlim([-yl yl]);
+hold on;
+plot([0, 0], ylim, 'k', 'linewidth', 0.25);
+set(ax, 'xcolor', 'none');
+% title('Non-overlapping environments', 'fontsize', 10);
+text(0, -2.1, '\Delta K_a', 'horizontalalignment', 'center', 'fontsize', 8);
+
+preparegraph('edge', 0);
+
+safe_print(fullfile('figs', 'env_change_vs_overlap.pdf'));
 
 
 
+ax = axes;
+ax.Units = 'normalized';
+ax.OuterPosition = [0.39 0.03 0.09 0.81];
+% yl = max(abs([K1g_narrow(:) - K2g_narrow(:) ; K1g_wide(:) - K2g_wide(:)])) / Ktot;
+yl = 0.06;
+plotDistChange(K1_generic_narrow, K2_generic_narrow, 'method', 'barh', 'receptornames', datafile.orNames, ...
+    'axfontsize', 4, 'labelrot', 30);
+xlim([-yl yl]);
+hold on;
+plot([0, 0], ylim, 'k', 'linewidth', 0.25);
+set(ax, 'xcolor', 'none');
+% title('Narrow tuning', 'fontsize', 10);
+text(0, -2.1, '\Delta K_a', 'horizontalalignment', 'center', 'fontsize', 8);
+
+ax = axes;
+ax.Units = 'normalized';
+ax.OuterPosition = [0.9 0.03 0.09 0.81];
+plotDistChange(K1_generic_wide, K2_generic_wide, 'method', 'barh', 'receptornames', datafile.orNames, ...
+    'axfontsize', 4, 'labelrot', 30);
+xlim([-yl yl]);
+hold on;
+plot([0, 0], ylim, 'k', 'linewidth', 0.25);
+set(ax, 'xcolor', 'none');
+% title('Wide tuning', 'fontsize', 10);
+text(0, -2.1, '\Delta K_a', 'horizontalalignment', 'center', 'fontsize', 8);
+
+preparegraph('edge', 0);
+
+safe_print(fullfile('figs', 'env_change_vs_tuning.pdf'));
 
 
 

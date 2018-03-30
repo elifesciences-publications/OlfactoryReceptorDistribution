@@ -38,7 +38,7 @@ end
 
 fig = figure;
 fig.Units = 'inches';
-fig.Position = [fig.Position(1:2) 5.8 1.9];
+fig.Position = [fig.Position(1:2) 6.0 1.8];
 
 % plot the receptor distribution
 % subplot(1, 3, 2);
@@ -71,7 +71,7 @@ h_leg = legend(h_area(rec_dispd), datafile.orNames(rec_dispd), 'location', 'nort
     'fontsize', 6);
 h_leg.Position = [h_leg.Position(1) - 0.025 h_leg.Position(2) + 0.08 h_leg.Position(3:4)];
 legend('boxoff');
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 
 ax = gca;
 ax.XMinorTick = 'off';
@@ -95,14 +95,13 @@ hold on;
 xlim([0 K_scaling*Ktot_values(end)]);
 ylim([0 K_scaling*Ktot_values(end)]);
 
-xlabel('Number of OSNs');
 ylabel('OSNs by receptor type');
 % find out which receptors we've displayed, and in what order they appeared
 % rec_dispd = rec_order(minK_ordered <= idx_max);
 % legend(h_area(rec_dispd), datafile.orNames(rec_dispd), 'location', 'northwest', ...
 %     'fontsize', 8);
 % legend('boxoff');
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 
 ax = gca;
 min_nz_value = min(ax.XTick(ax.XTick > 0));
@@ -111,6 +110,8 @@ iif = @(varargin) varargin{2 * find([varargin{1:2:end}], 1, 'first')}();
 ticks_to_str = @(x) iif(abs(x) > eps, ...
     [num2str(x/10^scale_exp) '\times10^{' int2str(scale_exp) '}'], ...
     true, '0');
+
+xlabel('Number of OSNs');
 
 ax = gca;
 ax.XTick = [0 4*10^5];
@@ -134,7 +135,7 @@ xlabel('Number of OSNs');
 ylabel('Active receptor types');
 xlim([K_scaling*Ktot_values(2), K_scaling*Ktot_values(end)]);
 ylim([0 M+1]);
-beautifygraph('fontscale', 0.833);
+beautifygraph('fontscale', 0.667);
 
 ax = gca;
 ax.XTick = [10^1 10^2 10^3 10^4 10^5];
