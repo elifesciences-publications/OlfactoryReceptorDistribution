@@ -35,6 +35,12 @@ parser.addParameter('framecolor', 'auto');
 parser.addParameter('fontsize', [], @(x) isempty(x) || strcmp(x, 'auto') || ...
     isnumeric(x) && isscalar(x));
 
+if strcmp(m, 'defaults') && nargin == 1
+    parser.parse;
+    disp(parser.Results);
+    return;
+end
+
 % parse
 parser.parse(varargin{:});
 params = parser.Results;
