@@ -27,6 +27,13 @@ parser.addParameter('scatteropts', {}, @(c) iscell(c) && isvector(c));
 parser.addParameter('fitopts', {}, @(c) iscell(c) && isvector(c));
 parser.addParameter('nodraw', false, @(b) isscalar(b) && islogical(b));
 
+% display defaults if asked to
+if nargin == 1 && strcmp(x, 'defaults')
+    parser.parse;
+    disp(parser.Results);
+    return;
+end
+
 % parse
 parser.parse(varargin{:});
 params = parser.Results;
@@ -34,27 +41,27 @@ params = parser.Results;
 if params.nodraw
     % make sure to pass this to drawfitline, as well
     params.fitopts = [params.fitopts {'nodraw', true}];
-end
-
-if ~params.nodraw
+    handles_scatter = struct;
+else
     handles_scatter = smartscatter(x, y, params.scatteropts{:});
+    % keep track of current state so we can return to it after drawfitline
     scatter_axes = gca;
     washold = ishold;
     hold on;
-else
-    handles_scatter = struct;
 end
 
+% draw the fit line (or get c and stats if 'nodraw' is true)
 [c, stats, handles_fit] = drawfitline(x, y, params.fitopts{:});
 
 if ~params.nodraw
-    % the axes should be given by the scatter plot, not by the fit line
+    % return to the old state
     axis(scatter_axes);
     if ~washold
         hold off;
     end
 end
 
+% collect the handles from both smartscatter and drawfitline
 handles = handles_scatter;
 fields = fieldnames(handles_fit);
 for i = 1:length(fields)
