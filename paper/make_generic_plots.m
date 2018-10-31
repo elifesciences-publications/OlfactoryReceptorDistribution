@@ -24,7 +24,7 @@ cmap = divergent([0.177 0.459 0.733], [0.737 0.180 0.172], 64, [0.969 0.957 0.96
 
 cl = quantile(flatten(S_fly(or_idxs, odor_idxs)), 0.9);
 
-plotMatrix(S_fly(or_idxs, odor_idxs), [-cl cl]);
+plotheat(S_fly(or_idxs, odor_idxs), [-cl cl]);
 colormap(cmap);
 
 axis off;
