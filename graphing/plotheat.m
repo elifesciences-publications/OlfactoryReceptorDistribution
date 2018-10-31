@@ -1,11 +1,11 @@
-function plotMatrix(m, varargin)
-% plotMatrix Plot the entries of a matrix.
-%   plotMatrix(m) makes a figure showing the contents of the matrix `m`.
+function plotheat(m, varargin)
+% PLOTHEAT Plot the entries of a matrix.
+%   PLOTHEAT(m) makes a figure showing the contents of the matrix `m`.
 %   This behaves like Matlab's imagesc, except for small matrices it draws
 %   a grid of lines in-between the entries. It can also display the values
 %   for each entry.
 %
-%   plotMatrix(m, [clow chigh]) scales the entries so that clow is mapped
+%   PLOTHEAT(m, [clow chigh]) scales the entries so that clow is mapped
 %   to the first entry in the colormap, and chigh is mapped to the last
 %   entry in the colormap.
 %
@@ -13,12 +13,12 @@ function plotMatrix(m, varargin)
 %    'edge': number
 %       Amount of space to leave between matrix entries, as a fraction of
 %       the space available for each entry.
-%    'frameColor': Matlab color specification, or empty
+%    'framecolor': Matlab color specification, or empty
 %       If not empty, this should be a letter or an RGB triplet giving the
 %       color of the frame surrounding the plot. If empty, no frame is
 %       drawn. By default, there's a white frame whenever the image has 32
 %       or fewer rows and 32 or fewer columns.
-%    'fontSize': number
+%    'fontsize': number
 %       Size of font used to display values of entries as a fraction of
 %       each square in the drawing. Set to an empty matrix to not display
 %       entries (default), or 'auto' to use the default size.
@@ -31,8 +31,8 @@ parser.FunctionName = mfilename;
 parser.addOptional('clim', [], @(v) isvector(v) && isnumeric(v) && length(v) == 2);
 
 parser.addParameter('edge', 0.05, @(x) isnumeric(x) && isscalar(x));
-parser.addParameter('frameColor', 'auto');
-parser.addParameter('fontSize', [], @(x) isempty(x) || strcmp(x, 'auto') || ...
+parser.addParameter('framecolor', 'auto');
+parser.addParameter('fontsize', [], @(x) isempty(x) || strcmp(x, 'auto') || ...
     isnumeric(x) && isscalar(x));
 
 % parse
@@ -45,15 +45,15 @@ if ~ismatrix(m) || ~isnumeric(m)
 end
 
 % handle some defaults
-if strcmp(params.fontSize, 'auto')
-    params.fontSize = 0.3;
+if strcmp(params.fontsize, 'auto')
+    params.fontsize = 0.3;
 end
 
-if strcmp(params.frameColor, 'auto')
+if strcmp(params.framecolor, 'auto')
     if all(size(m) <= 32)
-        params.frameColor = [1 1 1];
+        params.framecolor = [1 1 1];
     else
-        params.frameColor = [];
+        params.framecolor = [];
     end
 end
 
@@ -66,7 +66,7 @@ end
 hold on;
 
 % add grid
-if ~isempty(params.frameColor)
+if ~isempty(params.framecolor)
     [M, N] = size(m);
     
     % convert units for params.edge
@@ -78,10 +78,10 @@ if ~isempty(params.frameColor)
     
     width = params.edge * imPos(3) / N;
     for i = 0:M
-        line([0.5, N + 0.5], i + [0.5, 0.5], 'color', params.frameColor, 'linewidth', width);
+        line([0.5, N + 0.5], i + [0.5, 0.5], 'color', params.framecolor, 'linewidth', width);
     end
     for i = 0:N
-        line(i + [0.5, 0.5], [0.5, M + 0.5], 'color', params.frameColor, 'linewidth', width);
+        line(i + [0.5, 0.5], [0.5, M + 0.5], 'color', params.framecolor, 'linewidth', width);
     end
 end
 
