@@ -568,7 +568,7 @@ odor_pic_names = {'1-hexanol', 'E2-hexenol', 'E3-hexenol', 'Z3-hexenol', ...
 odor_pic_idxs = zeros(size(odor_pic_names));
 for i = 1:length(odor_pic_names)
     odor_pic_idxs(i) = find(strcmp(datafile.odorNames, odor_pic_names{i}));
-end;
+end
 
 %cticks = [1e-5/3, 1e-5, 1e-4/3, 1e-4, 1e-3/3, 1e-3, 1e-2/3, 1e-2, 1e-1/3, 1e-1];
 cticks = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1];
@@ -586,7 +586,7 @@ n_odor = length(odor_pic_idxs);
 for i = 0:n_odor
     line([0.5, n_odor + 0.5], i + [0.5, 0.5], 'color', 'w', 'linewidth', 2);
     line(i + [0.5, 0.5], [0.5, n_odor + 0.5], 'color', 'w', 'linewidth', 2);
-end;
+end
 
 beautifygraph;
 
@@ -608,7 +608,7 @@ n_odor = length(odor_pic_idxs);
 for i = 0:n_odor
     line([0.5, n_odor + 0.5], i + [0.5, 0.5], 'color', 'w', 'linewidth', 2);
     line(i + [0.5, 0.5], [0.5, n_odor + 0.5], 'color', 'w', 'linewidth', 2);
-end;
+end
 
 beautifygraph;
 
