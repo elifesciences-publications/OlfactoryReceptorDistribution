@@ -1,39 +1,55 @@
-function safe_print(fname, type, varargin)
+function safe_print(fname, varargin)
 % SAFE_PRINT Print image to file, avoiding overwrite.
 %   SAFE_PRINT(fname) saves the current figure to a PDF.
 %
-%   SAFE_PRINT(fname, 'png') saves the current figure to a PNG file. If no
-%   additional arguments are passed (see below), this includes the '-r300'
-%   option to use 300 DPI.
-%
-%   Additional arguments are passed to Matlab's PRINT command.
+%   SAFE_PRINT(fname, 'type', 'png') saves the current figure to a PNG file.
 %
 %   The extension is added automatically if not provided (which is
 %   recommended).
+%
+%   Options:
+%    'type'
+%       Type of output file.
+%    'print_opts'
+%       Options to be passed to Matlab's PRINT.
 
-if nargin < 2
-    type = 'pdf';
+% parse optional arguments
+parser = inputParser;
+parser.CaseSensitive = true;
+parser.FunctionName = mfilename;
+
+parser.addParameter('type', 'pdf', @(s) ismember(s, {'pdf', 'png'}));
+parser.addParameter('print_opts', {}, @(c) iscell(c) && isvector(c));
+
+% show defaults
+if nargin == 1 && strcmp(fname, 'defaults')
+    parser.parse;
+    disp(parser.Results);
+    return;
 end
 
-if strcmp(type, 'png') && isempty(varargin)
-    varargin = {'-r300'};
-end
+% parse
+parser.parse(varargin{:});
+params = parser.Results;
 
+% add extension if none was given
 [~, ~, ext] = fileparts(fname);
 if isempty(ext)
-    fname = [fname '.' type];
+    fname = [fname '.' params.type];
 end
 
+% if file exists, warn and refuse to overwrite
 if exist(fname, 'file')
     warning([mfilename ':fexist'], 'File already exists.');
     return;
 end
 
-switch type
+% set default parameters based on file type
+switch params.type
     case 'pdf'
-        print('-dpdf', varargin{:}, fname);
+        print('-dpdf', params.print_opts{:}, fname);
     case 'png'
-        print('-dpng', varargin{:}, fname);
+        print('-dpng', '-r300', params.print_opts{:}, fname);
     otherwise
         error([mfilename ':badtype'], 'Unrecognized file type.');
 end
