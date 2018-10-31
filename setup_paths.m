@@ -6,8 +6,8 @@ function setup_paths
 %   when Matlab quits.
 
 PWD = pwd;
-folders = {'analysis', 'data', 'dynamics', 'graphing', 'optimization', ...
-    'sandbox', 'utils'};
+folders = {'analysis', 'data', 'dynamics', 'environment', 'graphing', ...
+    'optimization', 'utils'};
 
 for i = 1:length(folders)
     addpath(fullfile(PWD, folders{i}));
