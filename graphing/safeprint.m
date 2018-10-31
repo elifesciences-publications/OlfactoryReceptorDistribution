@@ -1,8 +1,8 @@
-function safe_print(fname, varargin)
-% SAFE_PRINT Print image to file, avoiding overwrite.
-%   SAFE_PRINT(fname) saves the current figure to a PDF.
+function safeprint(fname, varargin)
+% SAFEPRINT Print image to file, avoiding overwrite.
+%   SAFEPRINT(fname) saves the current figure to a PDF.
 %
-%   SAFE_PRINT(fname, 'type', 'png') saves the current figure to a PNG file.
+%   SAFEPRINT(fname, 'type', 'png') saves the current figure to a PNG file.
 %
 %   The extension is added automatically if not provided (which is
 %   recommended).
