@@ -58,7 +58,11 @@ if strcmp(params.frameColor, 'auto')
 end
 
 % draw matrix entries
-imagesc(m, params.clim);
+if isempty(params.clim)
+    imagesc(m);
+else
+    imagesc(m, params.clim);
+end
 hold on;
 
 % add grid
