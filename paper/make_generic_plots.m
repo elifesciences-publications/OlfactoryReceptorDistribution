@@ -180,4 +180,4 @@ ax1.Position(4) = hmin;
 ax2.Position(4) = hmin;
 ax3.Position(4) = hmin;
 
-% safeprint(fullfile('figs', 'natural_receptor_dist'));
+safeprint(fullfile('figs', 'dependence_on_Ktot'));
