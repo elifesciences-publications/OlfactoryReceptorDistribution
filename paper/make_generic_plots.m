@@ -38,9 +38,15 @@ safeprint(fullfile('figs', 'example_sensing'));
 %% Make environment
 
 % random environment, but make it reproducible
-rng(2334);
+rng(92376);
 
-Gamma = generate_environment('rnd_diag_const', size(S_fly, 2));
+% * the concentrations used in Hallem&Carlson were high; here we're using
+%   concentrations 1000 times smaller (so that the variance is about 1e-6)
+% * the actual variances of odor concentrations in natural scenes are
+%   unknown, so we effectively fit them to obtain neuron numbers in the
+%   right ballpark
+Gamma = generate_environment('rnd_diag_const', size(S_fly, 2), ...
+    'diagmu', 1e-6, 'diagsize', 1e-6, 'offdiagmu', 1e-7);
 
 %% Get distribution at various values for Ktot
 
@@ -49,9 +55,6 @@ Ktot_values = [0 logspace(log10(5), log10(7.5e5), 100)];
 
 % normalize by standard deviations of background rates
 S_fly_normalized = bsxfun(@rdivide, S_fly, sensing_fly.bkgStd');
-
-% use an additional normalization factor to get more readable neuron numbers
-S_fly_normalized = S_fly_normalized / 1000;
 
 [K, info_values, Q, info_fct] = calculate_optimal_dist(...
     S_fly_normalized, Gamma, Ktot_values);
@@ -75,13 +78,17 @@ fig = figure;
 fig.Units = 'inches';
 fig.Position = [fig.Position(1:2) 6.0 1.8];
 
+% make the background white so the plot looks the same in the window as it
+% looks on paper
+fig.Color = [1 1 1];
+
 % plot the dependence on Ktot for small Ktot
 ax1 = axes;
 ax1.Units = 'normalized';
 ax1.OuterPosition = [1/3 0 1/3 1];
 
 % approximate maximum value of Ktot for this plot
-smallKtot_limit = 185;
+smallKtot_limit = 130;
 [~, idx_max] = min(abs(Ktot_values - smallKtot_limit));
 
 % show the OSN numbers as an area plot
