@@ -52,6 +52,12 @@ parser.addParameter('lagsearchopts', {}, @(c) (iscell(c) && isvector(c)) || ...
     isstruct(c));
 parser.addParameter('lagstart', 1e-3, @(x) isscalar(x) && isnumeric(x));
 
+if strcmp(S, 'defaults') && nargin == 1
+    parser.parse;
+    disp(parser.Results);
+    return;
+end
+
 % parse
 parser.parse(varargin{:});
 params = parser.Results;
@@ -90,7 +96,11 @@ end
 
 % perform the optimization
 ident = eye(size(Q));
-progress = TextProgress('varying Ktot...');
+if length(Ktot_values) > 1
+    progress = TextProgress('varying Ktot...');
+else
+    progress = [];
+end
 for i = 1:length(Ktot_values)
     crtK = Ktot_values(i);
     if crtK == 0
@@ -115,9 +125,13 @@ for i = 1:length(Ktot_values)
 
     Koptim(Koptim < eps) = 0; % eliminate rounding errors
     K(:, i) = Koptim;
-    progress.update(100*i/length(Ktot_values));
+    if ~isempty(progress)
+        progress.update(100*i/length(Ktot_values));
+    end
 end
-progress.done('done!');
+if ~isempty(progress)
+    progress.done('done!');
+end
 
 % don't calculate the information values if they're never used
 if nargin > 1
