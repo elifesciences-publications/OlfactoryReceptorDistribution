@@ -7,7 +7,7 @@ function setup_paths
 
 PWD = pwd;
 folders = {'analysis', 'data', 'dynamics', 'environment', 'graphing', ...
-    'optimization', 'utils'};
+    'optimization', 'sensing', 'utils'};
 
 for i = 1:length(folders)
     addpath(fullfile(PWD, folders{i}));
