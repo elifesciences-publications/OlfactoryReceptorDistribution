@@ -1,4 +1,4 @@
-% Look at how the tuning of receptors and the kind environment changes
+% Look at how the tuning of receptors and the kind of environment changes
 % affect the optimal receptor distribution.
 
 %% Setup
