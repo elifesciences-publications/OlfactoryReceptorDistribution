@@ -40,8 +40,13 @@ xlim(tuning_min_max);
 ylim(fixed_y_lim);
 
 % switch to log space on x axis and adjust the ticks
-set(ax, 'xtick', tuning_min_max, 'xticklabel', {'narrow', 'wide'}, ...
+set(ax, 'xtick', tuning_min_max, ...
+    'xticklabel', {[num2str(tuning_min_max(1)) ' (narrow)'], ...
+                   [num2str(tuning_min_max(2)) ' (wide)']}, ...
     'xscale', 'log');
+
+% don't waste ink on the axes
+ax.LineWidth = 0.5;
 
 % label the axes
 xlabel('receptor tuning');
@@ -50,8 +55,11 @@ ylabel('corr(log Q_{aa}, K_a)');
 % plot the 0 correlation line as a visual guide
 plot(xlim, [0 0], 'k:');
 
-% beautify, making sure fonts aren't too big
-beautifygraph('fontscale', 0.667);
+% beautify, making sure fonts aren't too big, and axes don't waste ink
+beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5);
+
+% make the ticks a bit bigger
+ax.TickLength = 2*ax.TickLength;
 
 % make the axes for the first plot -- K vs. -diag(inv(Q))
 ax = axes;
@@ -72,7 +80,9 @@ xlim(tuning_min_max);
 ylim(fixed_y_lim);
 
 % switch to log space on x axis and adjust the ticks
-set(ax, 'xtick', tuning_min_max, 'xticklabel', {'narrow', 'wide'}, ...
+set(ax, 'xtick', tuning_min_max, ...
+    'xticklabel', {[num2str(tuning_min_max(1)) ' (narrow)'], ...
+                   [num2str(tuning_min_max(2)) ' (wide)']}, ...
     'xscale', 'log');
 
 % label the axes
@@ -82,8 +92,11 @@ ylabel('corr(-Q^{-1}_{aa}, K_a)');
 % plot the 0 correlation line as a visual guide
 plot(xlim, [0 0], 'k:');
 
-% beautify, making sure fonts aren't too big
-beautifygraph('fontscale', 0.667);
+% beautify, making sure fonts aren't too big, and axes don't waste ink
+beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5);
+
+% make the ticks a bit bigger
+ax.TickLength = 2*ax.TickLength;
 
 % adjust figure for printing
 preparegraph;
@@ -97,6 +110,8 @@ fig = figure;
 fig.Units = 'inches';
 fig.Position = [fig.Position(1:2) 2.4 1.4];
 
+fig.Color = [1 1 1];
+
 crt_Ktot = 15*Ktot;
 [crt_K, ~, crt_Q] = calculate_optimal_dist(results.inputs.S{1, end, 1}, ...
     Gamma1, crt_Ktot);
@@ -108,10 +123,12 @@ crt_diag_invQ = diag(crt_invQ);
 approx_const = crt_Ktot/n_receptors + mean(crt_diag_invQ);
 % show the dependence between the diagonal of the inverse overlap matrix
 % and the optimal receptor counts
-scatterfit(crt_diag_invQ, crt_K, ...
+[~, ~, h] = scatterfit(crt_diag_invQ, crt_K, ...
     'scatteropts', {'color', [0.176, 0.459, 0.733], 'size', 60, 'filled', true}, ...
     'fitopts', {'line', [-1, approx_const], 'style', {'k--', 'linewidth', 1}, ...
     'legend', false});
+% add a thin edge around the data points
+h.hscatter.MarkerEdgeColor = [1 1 1];
 
 % ylim([0, max(crt_K)*1.2]);
 hold on;
@@ -127,10 +144,12 @@ xlabel('(Q^{-1})_{aa}');
 ylabel('K_a');
 
 % beautify, making sure fonts aren't too big
-beautifygraph('fontscale', 0.667);
+beautifygraph('fontscale', 0.667, 'linewidth', 0.5, 'minorticks', 'off');
 
 % adjust figure for printing
 preparegraph;
+
+safeprint(fullfile('figs', 'K_vs_invQ'));
 
 %% How well does diag(inv(Q)) predict K at wide tuning
 
@@ -138,6 +157,8 @@ preparegraph;
 fig = figure;
 fig.Units = 'inches';
 fig.Position = [fig.Position(1:2) 2.4 1.4];
+
+fig.Color = [1 1 1];
 
 % choose a particular result
 idx_rep = 1;
@@ -157,8 +178,10 @@ approx_const = Ktot/n_receptors + mean(crt_diag_invQ);
 %     'scatteropts', {'color', [0.176, 0.459, 0.733], 'size', 60, 'filled', true}, ...
 %     'fitopts', {'line', [-1, approx_const], 'style', {'k--', 'linewidth', 1}, ...
 %     'legend', false});
-smartscatter(crt_diag_invQ, crt_K, 'color', [0.176, 0.459, 0.733], ...
+h = smartscatter(crt_diag_invQ, crt_K, 'color', [0.176, 0.459, 0.733], ...
     'size', 60, 'filled', true, 'alpha', 0.3);
+% add a thin edge around the data points
+h.hscatter.MarkerEdgeColor = [1 1 1];
 
 ylim([0, max(crt_K)*1.2]);
 
@@ -167,7 +190,7 @@ xlabel('(Q^{-1})_{aa}');
 ylabel('K_a');
 
 % beautify, making sure fonts aren't too big
-beautifygraph('fontscale', 0.667);
+beautifygraph('fontscale', 0.667, 'linewidth', 0.5);
 
 % adjust figure for printing
 preparegraph;
