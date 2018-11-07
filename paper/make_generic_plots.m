@@ -46,7 +46,7 @@ rng(92376);
 %   unknown, so we effectively fit them to obtain neuron numbers in the
 %   right ballpark
 Gamma = generate_environment('rnd_diag_const', size(S_fly, 2), ...
-    'diagmu', 1e-6, 'diagsize', 1e-6, 'offdiagmu', 1e-7);
+    'diag_mu', 1e-6, 'diag_size', 1e-6, 'offdiag_mu', 1e-7);
 
 %% Get distribution at various values for Ktot
 
@@ -93,7 +93,7 @@ smallKtot_limit = 130;
 
 % show the OSN numbers as an area plot
 h_area = area(Ktot_values(1:idx_max), K(:, 1:idx_max)', ...
-    'linewidth', 1, 'facecolor', 'flat');
+    'linewidth', 0.5, 'facecolor', 'flat');
 hold on;
 
 % mark transitions where new receptors kick in
@@ -109,7 +109,7 @@ ylim([0 Ktot_values(idx_max)]);
 
 xlh = xlabel('Number of OSNs');
 xlh.Units = 'characters';
-xlh.Position(2) = xlh.Position(2); % XXX this fixes the position for some reason
+xlh.Position(2) = xlh.Position(2) - 0.15;
 ylabel('OSNs by receptor type');
 
 % find out which receptors we've displayed, and in what order they appeared
@@ -117,13 +117,15 @@ ylabel('OSNs by receptor type');
 rec_dispd = rec_order(minK_ordered <= idx_max);
 h_leg = legend(h_area(rec_dispd), sensing_fly.orNames(rec_dispd), 'location', 'northwest', ...
     'fontsize', 6);
-h_leg.Position = [h_leg.Position(1) - 0.025 h_leg.Position(2) + 0.08 h_leg.Position(3:4)];
+h_leg.Position = [h_leg.Position(1) - 0.005 h_leg.Position(2) + 0.09 h_leg.Position(3:4)];
 legend('boxoff');
-beautifygraph('fontscale', 0.667);
+beautifygraph(ax1, 'fontscale', 0.667, 'ticksize', 12);
 
 ax1.XMinorTick = 'off';
 ax1.YMinorTick = 'off';
 ax1.TickLength = 3*ax1.TickLength;
+
+ax1.LineWidth = 0.5;
 
 % plot the dependence on Ktot for large Ktot
 ax2 = axes;
@@ -138,7 +140,7 @@ xlim([0 Ktot_values(end)]);
 ylim([0 Ktot_values(end)]);
 
 ylabel('OSNs by receptor type');
-beautifygraph('fontscale', 0.667);
+beautifygraph('fontscale', 0.667, 'ticksize', 12);
 
 % format the ticks in a nicer way
 ax2.XTick = [0 4*10^5];
@@ -146,11 +148,14 @@ ax2.XTickLabel = {0, '4 \times 10^5'};
 
 xlh = xlabel('Number of OSNs');
 xlh.Units = 'characters';
-xlh.Position(2) = xlh.Position(2) - 0.19;
+xlh.Position(2) = xlh.Position(2) - 0.13;
+beautifygraph(ax2, 'fontscale', 0.667);
 
 ax2.XMinorTick = 'off';
 ax2.YMinorTick = 'off';
 ax2.TickLength = 3*ax2.TickLength;
+
+ax2.LineWidth = 0.5;
 
 % make plot showing how the number of receptor expressed in non-zero
 % numbers of neurons grows with the total number of neurons
@@ -166,7 +171,7 @@ xlabel('Number of OSNs');
 ylabel('Active receptor types');
 xlim([Ktot_values(2), Ktot_values(end)]);
 ylim([0 M+1]);
-beautifygraph('fontscale', 0.667);
+beautifygraph(ax3, 'fontscale', 0.667, 'ticksize', 12);
 
 % select a good crop of ticks
 ax3.XTick = [10^1 10^2 10^3 10^4 10^5];
@@ -174,6 +179,8 @@ ax3.XTick = [10^1 10^2 10^3 10^4 10^5];
 ax3.XMinorTick = 'off';
 ax3.YMinorTick = 'off';
 ax3.TickLength = 3*ax3.TickLength;
+
+ax3.LineWidth = 0.5;
 
 preparegraph('edge', 0);
 
