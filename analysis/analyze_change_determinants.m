@@ -73,6 +73,8 @@ Gamma2_nonoverlapping =  cell(1, n_env_samples);
 K1_nonoverlapping = cell(1, n_env_samples);
 K2_nonoverlapping = cell(1, n_env_samples);
 
+masks = cell(1, n_env_samples);
+
 progress = TextProgress('generating non-overlapping environments');
 for i = 1:n_env_samples
     Gamma1_nonoverlapping{i} = cov_factor * generate_environment('rnd_corr', size(S_fly, 2));
@@ -82,6 +84,7 @@ for i = 1:n_env_samples
     mask = true(size(S_fly, 2), 1);
 %     mask(1:floor(end/2)) = false;
     mask(randperm(length(mask), floor(length(mask)/2))) = false;
+    masks{i} = mask;
     % to ensure we maintain positive-definiteness, work on the square roots of
     % the environment matrices
     sqrtGamma1_nonoverlapping = sqrtm(Gamma1_nonoverlapping{i});
@@ -191,7 +194,7 @@ disp(['Wilcoxon rank sum test p = ' num2str(rs_p, '%g') '.']);
 %% Save the data
 
 save(fullfile('save', 'change_nonoverlapping.mat'), 'Gamma1_generic', 'Gamma2_generic', ...
-    'Gamma1_nonoverlapping', 'Gamma2_nonoverlapping', ...
+    'Gamma1_nonoverlapping', 'Gamma2_nonoverlapping', 'masks', ...
     'K1_generic', 'K2_generic', 'K1_nonoverlapping', 'K2_nonoverlapping', ...
     'Ktot', 'S_fly', 'S_fly_normalized', ...
     'n_env_samples', 'optim_args', 'sensing_fly');
