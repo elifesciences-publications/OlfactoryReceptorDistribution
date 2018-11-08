@@ -49,7 +49,7 @@ switch params.type
     case 'pdf'
         print('-dpdf', params.print_opts{:}, fname);
     case 'png'
-        print('-dpng', '-r300', params.print_opts{:}, fname);
+        print('-dpng', '-r600', params.print_opts{:}, fname);
     otherwise
         error([mfilename ':badtype'], 'Unrecognized file type.');
 end
