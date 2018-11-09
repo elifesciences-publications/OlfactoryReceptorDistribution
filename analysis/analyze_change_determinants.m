@@ -17,10 +17,25 @@
 %       Number of pairs of environments to generate for each setting in
 %       which we're checking how the type of environmental change affects
 %       the magnitude of the change in receptor distribution.
+%   n_sensing_samples:
+%       Number of pairs of wide and narrow sensing matrices to generate.
+%   sensing_snr:
+%       Signal-to-noise ratio in artificial sensing matrices.
+%   tuning_narrow:
+%       Tuning parameter to use for narrowly-tuned sensing matrices.
+%   tuning_wide:
+%       Tuning parameter to use for widely-tuned sensing matrices.
 
 setdefault('Ktot', 25000);
 setdefault('cov_factor', 1e-4);
 setdefault('n_env_samples', 500);
+% setdefault('n_sensing_samples', 500);
+setdefault('n_sensing_samples', 50);
+setdefault('sensing_snr', 200);
+setdefault('tuning_narrow', 0.05);
+% setdefault('tuning_wide', 0.80);
+setdefault('tuning_wide', 0.50);
+% setdefault('tuning_wide', 0.20);
 
 %% Load Hallem&Carlson sensing data
 
@@ -196,8 +211,101 @@ disp(['Wilcoxon rank sum test p = ' num2str(rs_p, '%g') '.']);
 save(fullfile('save', 'change_nonoverlapping.mat'), 'Gamma1_generic', 'Gamma2_generic', ...
     'Gamma1_nonoverlapping', 'Gamma2_nonoverlapping', 'masks', ...
     'K1_generic', 'K2_generic', 'K1_nonoverlapping', 'K2_nonoverlapping', ...
+    'Ktot', 'S_fly', 'S_fly_normalized', 'tuning_narrow', 'tuning_wide', ...
+    'sensing_snr', 'n_env_samples', 'optim_args', 'sensing_fly');
+
+%% Generate narrow and wide tuning sensing matrices
+
+% keep things reproducible
+rng(123);
+
+% use two different scalings for the sensing matrices, to ensure a similar
+% SNR level
+S_narrow_scaling = 27;
+S_wide_scaling = 100;
+
+% generate narrowly- and broadly-tuned sensing matrices
+S_narrow =  cell(1, n_sensing_samples);
+S_wide =  cell(1, n_sensing_samples);
+
+K1_narrow = cell(1, n_sensing_samples);
+K2_narrow = cell(1, n_sensing_samples);
+
+K1_wide = cell(1, n_sensing_samples);
+K2_wide = cell(1, n_sensing_samples);
+
+progress = TextProgress('generating generic environments');
+optim_args2 = optim_args;
+% optim_args2{2} = [optim_args2{2} {'MaxIterations', 10000}];
+optim_args2 = [optim_args2 {'sumtol', 2e-3}];
+for i = 1:n_sensing_samples
+    S_narrow{i} = S_narrow_scaling*generate_random_sensing(size(S_fly, 1), size(S_fly, 2), ...
+        tuning_narrow, sensing_snr);
+    S_wide{i} = S_wide_scaling*generate_random_sensing(size(S_fly, 1), size(S_fly, 2), ...
+        tuning_wide, sensing_snr);
+    
+    K1_narrow{i} = calculate_optimal_dist(S_narrow{i}, Gamma1_generic{1}, ...
+        Ktot, optim_args2{:});
+    K2_narrow{i} = calculate_optimal_dist(S_narrow{i}, Gamma2_generic{1}, ...
+        Ktot, optim_args2{:});
+    K1_wide{i} = calculate_optimal_dist(S_wide{i}, Gamma1_generic{1}, ...
+        Ktot, optim_args2{:});
+    K2_wide{i} = calculate_optimal_dist(S_wide{i}, Gamma2_generic{1}, ...
+        Ktot, optim_args2{:});
+    
+    progress.update(i*100/n_sensing_samples);
+end
+progress.done('done!');
+
+%% compare \Delta K between narrow and wide tuning
+
+fig = figure;
+fig.Color = [1 1 1];
+
+diff_K_narrow = arrayfun(@(i) K1_narrow{i}(:) - K2_narrow{i}(:), ...
+    1:n_sensing_samples, 'uniform', false);
+diff_K_wide = arrayfun(@(i) K1_wide{i}(:) - K2_wide{i}(:), ...
+    1:n_sensing_samples, 'uniform', false);
+
+pooled_diff_K_narrow = abs(flatten(cell2mat(diff_K_narrow)));
+pooled_diff_K_wide = abs(flatten(cell2mat(diff_K_wide)));
+
+pooled_K_tuning_range = quantile(pooled_diff_K_narrow, [0.025 0.975]);
+
+K_bins = linspace(pooled_K_tuning_range(1), pooled_K_tuning_range(2), 100);
+
+hold on;
+h1 = histogram(pooled_diff_K_narrow(:), K_bins, ...
+    'edgecolor', [0.933 0.518 0.204], 'linewidth', 1, ...
+    'normalization', 'pdf', 'displaystyle', 'stairs');
+h2 = histogram(pooled_diff_K_wide(:), K_bins, ...
+    'edgecolor', [0.177, 0.459, 0.733], 'linewidth', 1, ...
+    'normalization', 'pdf', 'displaystyle', 'stairs');
+
+xlabel('abs(\DeltaK_i)');
+ylabel('PDF');
+
+legend([h1 h2], {'narrow', 'wide'});
+legend('boxoff');
+
+beautifygraph('linewidth', 0.5);
+
+preparegraph;
+
+[~, ks_p] = kstest2(pooled_diff_K_narrow, pooled_diff_K_wide);
+rs_p = ranksum(pooled_diff_K_narrow, pooled_diff_K_wide, ...
+    'tail', 'left');
+
+disp(['KS test p = ' num2str(ks_p, '%g') '.']);
+disp(['Wilcoxon rank sum test p = ' num2str(rs_p, '%g') '.']);
+
+%% Save the data
+
+save(fullfile('save', 'change_vs_tuning.mat'), 'Gamma1_generic', 'Gamma2_generic', ...
+    'S_narrow', 'S_wide', 'S_narrow_scaling', 'S_wide_scaling', 'optim_args2', ...
+    'K1_wide', 'K2_wide', 'K1_narrow', 'K2_narrow', ...
     'Ktot', 'S_fly', 'S_fly_normalized', ...
-    'n_env_samples', 'optim_args', 'sensing_fly');
+    'n_sensing_samples', 'sensing_fly');
 
 %% SCRATCH
 
