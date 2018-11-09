@@ -187,6 +187,78 @@ disp(['Wilcoxon rank sum test p = ' num2str(rs_p, '%g') '.']);
 
 safeprint(fullfile('figs', 'deltaK_cdf_generic_vs_nonoverlapping'));
 
+%% Load tuning results
+
+load(fullfile('save', 'change_vs_tuning.mat'));
+
+%% Plot \Delta K distributions
+
+fig = figure;
+fig.Color = [1 1 1];
+
+fig.Units = 'inches';
+fig.Position(3:4) = [3 2];
+
+% calculate change in optimal receptor distributions
+diff_K_narrow = arrayfun(@(i) K1_narrow{i}(:) - K2_narrow{i}(:), ...
+    1:n_sensing_samples, 'uniform', false);
+diff_K_nonoverlapping = arrayfun(@(i) K1_wide{i}(:) - K2_wide{i}(:), ...
+    1:n_sensing_samples, 'uniform', false);
+
+% pool all the changes in receptor numbers together
+% use absolute differences since by definition the mean change is 0
+% (because Ktot is fixed)
+pooled_diff_K_generic = abs(flatten(cell2mat(diff_K_generic)));
+pooled_diff_K_nonoverlapping = abs(flatten(cell2mat(diff_K_nonoverlapping)));
+
+% find a suitable range for the histograms
+pooled_K_range = quantile(pooled_diff_K_generic, 0.95);
+
+K_bins = linspace(0, pooled_K_range, 100);
+
+% draw the histograms
+hold on;
+% h1 = histogram(pooled_diff_K_generic(:), K_bins, ...
+%     'edgecolor', cmap_covmat(end, :), 'linewidth', 1, ...
+%     'normalization', 'cdf', 'displaystyle', 'stairs');
+% h2 = histogram(pooled_diff_K_nonoverlapping(:), K_bins, ...
+%     'edgecolor', cmap_covmat(1, :), 'linewidth', 1, ...
+%     'normalization', 'cdf', 'displaystyle', 'stairs');
+n1 = histcounts(pooled_diff_K_generic(:), K_bins, 'normalization', 'cdf');
+n2 = histcounts(pooled_diff_K_nonoverlapping(:), K_bins, 'normalization', 'cdf');
+
+h1 = plot(K_bins(1:end-1), n1, 'color', cmap_covmat(end, :), 'linewidth', 1);
+h2 = plot(K_bins(1:end-1), n2, 'color', cmap_covmat(1, :), 'linewidth', 1);
+
+% fix axes labels an ranges
+xlabel('|\DeltaK_i|');
+ylabel('CDF');
+
+xlim([0 pooled_K_range]);
+ylim([0 1]);
+
+% add a legend
+hl = legend([h1 h2], {'generic', 'non-overlapping'}, 'location', 'southeast');
+hl.Position(1:2) = hl.Position(1:2) + [0.05 0.1];
+legend('boxoff');
+
+% beautify, prepare for printing, and print
+beautifygraph('fontscale', 0.667, 'linewidth', 0.5, 'ticksize', 12);
+
+preparegraph;
+
+% calculate p-values for differences between distributions
+[~, ks_p] = kstest2(pooled_diff_K_generic, pooled_diff_K_nonoverlapping);
+% rank-sum test is one-tailed with the alternative hypothesis being that
+% the \Delta Ks tend to be larger in the non-overlapping regime
+rs_p = ranksum(pooled_diff_K_generic, pooled_diff_K_nonoverlapping, ...
+    'tail', 'left');
+
+disp(['KS test p = ' num2str(ks_p, '%g') '.']);
+disp(['Wilcoxon rank sum test p = ' num2str(rs_p, '%g') '.']);
+
+% safeprint(fullfile('figs', 'deltaK_cdf_vs_tuning'));
+
 %% SCRATCH BELOW
 
 %% Plot distribution of log relative change in K
