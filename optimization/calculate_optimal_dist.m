@@ -37,6 +37,10 @@ function [K, info_values, Q, info_fct] = calculate_optimal_dist(S, Gamma, Ktot_v
 %       fminunc for finding the value of the Lagrange multiplier.
 %    'lagstart'
 %       Initial value to use for Laagrange multiplier optimization.
+%    'sumtol'
+%       Tolerance for value of sum(K) in the optimal distribution. If the
+%       difference between the sum of receptor numbers and the total number
+%       Ktot is larger than this tolerance, an error is issued.
 %
 %   See also: fmincon, optimoptions.
 
@@ -51,6 +55,7 @@ parser.addParameter('optimopts', {}, @(c) (iscell(c) && isvector(c)) || isstruct
 parser.addParameter('lagsearchopts', {}, @(c) (iscell(c) && isvector(c)) || ...
     isstruct(c));
 parser.addParameter('lagstart', 1e-3, @(x) isscalar(x) && isnumeric(x));
+parser.addParameter('sumtol', 1e-4, @(x) isscalar(x) && isnumeric(x) && x > 0);
 
 if strcmp(S, 'defaults') && nargin == 1
     parser.parse;
@@ -125,8 +130,13 @@ for i = 1:length(Ktot_values)
 
     Koptim(Koptim < eps) = 0; % eliminate rounding errors
     K(:, i) = Koptim;
+    
     if ~isempty(progress)
         progress.update(100*i/length(Ktot_values));
+    end
+    
+    if abs(sum(Koptim) - crtK) > params.sumtol
+        error([mfilename ':badsum'], 'The total number of receptors did not converge.');
     end
 end
 if ~isempty(progress)
