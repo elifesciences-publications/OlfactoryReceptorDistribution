@@ -7,8 +7,11 @@ function plotDistChange(K1, K2, varargin)
 %    'beautifyopts':
 %       Cell array of options to be passed to beautifygraph.
 %    'colors':
-%       Cell array containg two RGB colors, the first used for positive
-%       changes, the second for negative ones.
+%       Cell array containg two RGB colors. If 'method' is 'plot', the
+%       first is used for the starting environment, and the second is used
+%       for the target environment. If 'method' is 'bar' or 'barh', the
+%       first color is used for positive changes, and the second for
+%       negative ones.
 %    'method':
 %       How to show the change. This can be
 %        'plot': a plot where thin lines connect the distribution K1 drawn
