@@ -1,4 +1,4 @@
-function S = generate_random_sensing(M, N, tuning, snr, varargin)
+function [S, sigmas] = generate_random_sensing(M, N, tuning, snr, varargin)
 % GENERATE_RANDOM_SENSING Generate a random sensing matrix.
 %   S = GENERATE_RANDOM_SENSING(M, N, tuning, snr) generates an M x N random
 %   sensing matrix with narrow (small `tuning` parameter) or wide (large
@@ -14,6 +14,9 @@ function S = generate_random_sensing(M, N, tuning, snr, varargin)
 %   S = GENERATE_RANDOM_SENSING(M, N, [min_tuning, max_tuning], snr)
 %   generates receptive fields with standard deviations chosen uniformly at
 %   random from the range `[min_tuning, max_tuning]`.
+%
+%   [S, sigmas] = GENERATE_RANDOM_SENSING(...) also returns the standard
+%   deviations `sigmas` for each receptor.
 
 % parse optional arguments
 parser = inputParser;
@@ -33,6 +36,7 @@ S = zeros(M, N);
 if isscalar(tuning)
     tuning = [tuning tuning];
 end
+sigmas = zeros(M, 1);
 for i = 1:size(S, 1)
     crt_sigma = tuning(1) + diff(tuning)*rand;
     crt_pos = rand;
@@ -41,6 +45,7 @@ for i = 1:size(S, 1)
     crt_dist2 = 4*sin(pi*(linspace(0, 1, size(S, 2)) - crt_pos)) .^ 2;
     
     S(i, :) = exp(-0.5*crt_dist2/crt_sigma^2);
+    sigmas(i) = crt_sigma;
 end
 % now scrable the columns to make this look more realistic
 if params.shuffle
