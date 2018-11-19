@@ -191,7 +191,7 @@ safeprint(fullfile('figs', 'deltaK_cdf_generic_vs_nonoverlapping'));
 
 load(fullfile('save', 'change_vs_tuning.mat'));
 
-%% Plot \Delta K distributions
+%% Plot \Delta K vs. tuning per receptor
 
 fig = figure;
 fig.Color = [1 1 1];
@@ -199,65 +199,55 @@ fig.Color = [1 1 1];
 fig.Units = 'inches';
 fig.Position(3:4) = [3 2];
 
-% calculate change in optimal receptor distributions
-diff_K_narrow = arrayfun(@(i) K1_narrow{i}(:) - K2_narrow{i}(:), ...
-    1:n_sensing_samples, 'uniform', false);
-diff_K_nonoverlapping = arrayfun(@(i) K1_wide{i}(:) - K2_wide{i}(:), ...
-    1:n_sensing_samples, 'uniform', false);
+diffK_varied = flatten(cell2mat(arrayfun(@(i) K2_varied{i} - K1_varied{i}, ...
+    1:n_sensing_samples, 'uniform', false)));
+sigmas_varied_flat = flatten(cell2mat(sigmas_varied));
+S_varied_ipr = flatten(cell2mat(cellfun(@(v) ipr(abs(v)), S_varied, 'uniform', false)));
 
-% pool all the changes in receptor numbers together
-% use absolute differences since by definition the mean change is 0
-% (because Ktot is fixed)
-pooled_diff_K_generic = abs(flatten(cell2mat(diff_K_generic)));
-pooled_diff_K_nonoverlapping = abs(flatten(cell2mat(diff_K_nonoverlapping)));
+% bin_edges = linspace(min(S_varied_ipr), max(S_varied_ipr), 5);
+bin_edges = linspace(min(sigmas_varied_flat), max(sigmas_varied_flat) + eps, 4);
 
-% find a suitable range for the histograms
-pooled_K_range = quantile(pooled_diff_K_generic, 0.95);
+ipr_step = diff(bin_edges(1:2));
+% discretized_ipr = bin_edges(1) + ...
+%     floor((S_varied_ipr - bin_edges(1)) / ipr_step) * ipr_step;
+discretized_sigmas = bin_edges(1) + ...
+    floor((sigmas_varied_flat - bin_edges(1)) / ipr_step) * ipr_step;
 
-K_bins = linspace(0, pooled_K_range, 100);
+abs_diffK_varied = abs(diffK_varied);
+pooled_diffK = arrayfun(@(i) median(abs_diffK_varied(S_varied_ipr >= bin_edges(i) & ...
+    S_varied_ipr < bin_edges(i+1))), 1:length(bin_edges)-1);
+pooled_diffK_std = arrayfun(@(i) std(abs_diffK_varied(S_varied_ipr >= bin_edges(i) & ...
+    S_varied_ipr < bin_edges(i+1))), 1:length(bin_edges)-1);
 
-% draw the histograms
+% mask = abs(diffK_varied) > 1e-3;
+% stripplot(discretized_ipr, diffK_varied, 'jitter', ipr_step*0.5, 'kde', true, ...
+%     'boxes', true);
 hold on;
-% h1 = histogram(pooled_diff_K_generic(:), K_bins, ...
-%     'edgecolor', cmap_covmat(end, :), 'linewidth', 1, ...
-%     'normalization', 'cdf', 'displaystyle', 'stairs');
-% h2 = histogram(pooled_diff_K_nonoverlapping(:), K_bins, ...
-%     'edgecolor', cmap_covmat(1, :), 'linewidth', 1, ...
-%     'normalization', 'cdf', 'displaystyle', 'stairs');
-n1 = histcounts(pooled_diff_K_generic(:), K_bins, 'normalization', 'cdf');
-n2 = histcounts(pooled_diff_K_nonoverlapping(:), K_bins, 'normalization', 'cdf');
+% zl = plot([min(discretized_sigmas) max(discretized_sigmas)], [0, 0], ':k');
+plot([0.1 0.7], [0 0], ':k', 'linewidth', 0.5);
+stripplot(discretized_sigmas, diffK_varied, 'jitter', ipr_step*0.5, 'kde', true, ...
+    'boxes', true, 'colors', [0.788, 0.365, 0.388], 'marker', '.', ...
+    'boxOpts', {'linewidth', 1, 'color', 'k'});
+% stripplot(discretized_ipr(mask), diffK_varied(mask), 'jitter', ipr_step*0.5, 'kde', true, ...
+%     'boxes', true);
 
-h1 = plot(K_bins(1:end-1), n1, 'color', cmap_covmat(end, :), 'linewidth', 1);
-h2 = plot(K_bins(1:end-1), n2, 'color', cmap_covmat(1, :), 'linewidth', 1);
+% hold on;
+% bin_centers = 0.5*(bin_edges(1:end-1) + bin_edges(2:end));
+% bar(bin_centers, pooled_diffK);
+% errorbar(bin_centers, pooled_diffK, pooled_diffK_std);
 
-% fix axes labels an ranges
-xlabel('|\DeltaK_i|');
-ylabel('CDF');
+% scatterfit(S_varied_ipr, abs(diffK_varied));
 
-xlim([0 pooled_K_range]);
-ylim([0 1]);
+yl = max(abs(ylim));
+ylim(1.1*yl*[-1, 1]);
 
-% add a legend
-hl = legend([h1 h2], {'generic', 'non-overlapping'}, 'location', 'southeast');
-hl.Position(1:2) = hl.Position(1:2) + [0.05 0.1];
-legend('boxoff');
+xlabel('Receptor tuning width');
+ylabel('\DeltaK');
 
-% beautify, prepare for printing, and print
 beautifygraph('fontscale', 0.667, 'linewidth', 0.5, 'ticksize', 12);
-
 preparegraph;
 
-% calculate p-values for differences between distributions
-[~, ks_p] = kstest2(pooled_diff_K_generic, pooled_diff_K_nonoverlapping);
-% rank-sum test is one-tailed with the alternative hypothesis being that
-% the \Delta Ks tend to be larger in the non-overlapping regime
-rs_p = ranksum(pooled_diff_K_generic, pooled_diff_K_nonoverlapping, ...
-    'tail', 'left');
-
-disp(['KS test p = ' num2str(ks_p, '%g') '.']);
-disp(['Wilcoxon rank sum test p = ' num2str(rs_p, '%g') '.']);
-
-% safeprint(fullfile('figs', 'deltaK_cdf_vs_tuning'));
+safeprint(fullfile('figs', 'deltaK_vs_tuning'));
 
 %% SCRATCH BELOW
 
