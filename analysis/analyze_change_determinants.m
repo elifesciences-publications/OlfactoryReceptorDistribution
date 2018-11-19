@@ -25,6 +25,9 @@
 %       Tuning parameter to use for narrowly-tuned sensing matrices.
 %   tuning_wide:
 %       Tuning parameter to use for widely-tuned sensing matrices.
+%   tuning_varied:
+%       Range of tuning parameters to use for the sensing matrices with
+%       varied receptors.
 
 setdefault('Ktot', 25000);
 setdefault('cov_factor', 1e-4);
@@ -36,6 +39,7 @@ setdefault('tuning_narrow', 0.05);
 % setdefault('tuning_wide', 0.80);
 setdefault('tuning_wide', 0.50);
 % setdefault('tuning_wide', 0.20);
+setdefault('tuning_varied', [0.2 0.8]);
 
 %% Load Hallem&Carlson sensing data
 
@@ -214,6 +218,122 @@ save(fullfile('save', 'change_nonoverlapping.mat'), 'Gamma1_generic', 'Gamma2_ge
     'Ktot', 'S_fly', 'S_fly_normalized', 'tuning_narrow', 'tuning_wide', ...
     'sensing_snr', 'n_env_samples', 'optim_args', 'sensing_fly');
 
+%% Generate sensing matrices with receptors having a range of tuning widths
+
+% keep things reproducible
+rng(123);
+
+% scale sensing matrix to get reasonable SNR
+S_varied_scaling = 5;
+
+% scale Ktot and Gamma in opposite ways to improve convergence without
+% changing relative receptor ratios
+Ktot_varied_scaling = 1/300;
+Gamma_varied_scaling = 1/Ktot_varied_scaling;
+
+% generate varied-tuned sensing matrices
+S_varied =  cell(1, n_sensing_samples);
+sigmas_varied = cell(1, n_sensing_samples);
+
+K1_varied = cell(1, n_sensing_samples);
+K2_varied = cell(1, n_sensing_samples);
+
+progress = TextProgress('generating sensing matrices');
+% optim_args = {'optimopts', ...
+%         {'MaxFunctionEvaluations', 50000, 'Display', 'notify-detailed'}};
+% optim_args2 = optim_args;
+% optim_args2{2} = [optim_args2{2} {'MaxIterations', 10000}];
+% optim_args2 = [optim_args2 {'sumtol', 1e-3}];
+
+Gamma1_varied = Gamma_varied_scaling * Gamma1_generic{1};
+Gamma2_varied = Gamma_varied_scaling * Gamma2_generic{1};
+Ktot_varied = Ktot_varied_scaling * Ktot;
+
+% sometimes the optimization fails... simply generate a new matrix then
+n_tries = 3;
+
+for i = 1:n_sensing_samples
+    j = 0;
+    worked = false;
+    while j < n_tries && ~worked
+        [S_varied{i}, sigmas_varied{i}] = generate_random_sensing(...
+            size(S_fly, 1), size(S_fly, 2), ...
+            tuning_varied, sensing_snr);
+        S_varied{i} = S_varied_scaling*S_varied{i};
+        
+        try
+            K1_varied{i} = calculate_optimal_dist(S_varied{i}, Gamma1_varied, ...
+                Ktot_varied, optim_args{:});
+            K2_varied{i} = calculate_optimal_dist(S_varied{i}, Gamma2_varied, ...
+                Ktot_varied, optim_args{:});
+            worked = true;
+        catch me
+            worked = false;
+        end
+    end
+    
+    progress.update(i*100/n_sensing_samples);
+end
+progress.done('done!');
+
+%% Scatter \Delta K vs. tuning IPR
+
+fig = figure;
+fig.Color = [1 1 1];
+
+diffK_varied = flatten(cell2mat(arrayfun(@(i) K2_varied{i} - K1_varied{i}, ...
+    1:n_sensing_samples, 'uniform', false)));
+sigmas_varied_flat = flatten(cell2mat(sigmas_varied));
+S_varied_ipr = flatten(cell2mat(cellfun(@(v) ipr(abs(v)), S_varied, 'uniform', false)));
+
+% bin_edges = linspace(min(S_varied_ipr), max(S_varied_ipr), 5);
+bin_edges = linspace(min(sigmas_varied_flat), max(sigmas_varied_flat) + eps, 4);
+
+ipr_step = diff(bin_edges(1:2));
+% discretized_ipr = bin_edges(1) + ...
+%     floor((S_varied_ipr - bin_edges(1)) / ipr_step) * ipr_step;
+discretized_sigmas = bin_edges(1) + ...
+    floor((sigmas_varied_flat - bin_edges(1)) / ipr_step) * ipr_step;
+
+abs_diffK_varied = abs(diffK_varied);
+pooled_diffK = arrayfun(@(i) median(abs_diffK_varied(S_varied_ipr >= bin_edges(i) & ...
+    S_varied_ipr < bin_edges(i+1))), 1:length(bin_edges)-1);
+pooled_diffK_std = arrayfun(@(i) std(abs_diffK_varied(S_varied_ipr >= bin_edges(i) & ...
+    S_varied_ipr < bin_edges(i+1))), 1:length(bin_edges)-1);
+
+% mask = abs(diffK_varied) > 1e-3;
+% stripplot(discretized_ipr, diffK_varied, 'jitter', ipr_step*0.5, 'kde', true, ...
+%     'boxes', true);
+stripplot(discretized_sigmas, diffK_varied, 'jitter', ipr_step*0.5, 'kde', true, ...
+    'boxes', true);
+% stripplot(discretized_ipr(mask), diffK_varied(mask), 'jitter', ipr_step*0.5, 'kde', true, ...
+%     'boxes', true);
+
+% hold on;
+% bin_centers = 0.5*(bin_edges(1:end-1) + bin_edges(2:end));
+% bar(bin_centers, pooled_diffK);
+% errorbar(bin_centers, pooled_diffK, pooled_diffK_std);
+
+% scatterfit(S_varied_ipr, abs(diffK_varied));
+
+xlabel('Receptor IPR');
+ylabel('\DeltaK');
+
+beautifygraph;
+preparegraph;
+
+% \Delta K more likely to be zero for receptors with higher IPR (which
+% corresponds to higher tuning width)
+
+%% Save the tuning data
+
+save(fullfile('save', 'change_vs_tuning.mat'), 'Gamma1_varied', 'Gamma2_varied', ...
+    'S_varied_scaling', 'Ktot_varied_scaling', 'Gamma_varied_scaling', ...
+    'S_varied', 'sigmas_varied', 'K1_varied', 'K2_varied', 'optim_args', ...
+    'Ktot', 'Ktot_varied', 'n_tries', 'n_sensing_samples');
+
+%% SCRATCH
+
 %% Generate narrow and wide tuning sensing matrices
 
 % keep things reproducible
@@ -234,7 +354,7 @@ K2_narrow = cell(1, n_sensing_samples);
 K1_wide = cell(1, n_sensing_samples);
 K2_wide = cell(1, n_sensing_samples);
 
-progress = TextProgress('generating generic environments');
+progress = TextProgress('generating narrow- and broad-tuned sensing matrices');
 optim_args2 = optim_args;
 % optim_args2{2} = [optim_args2{2} {'MaxIterations', 10000}];
 optim_args2 = [optim_args2 {'sumtol', 2e-3}];
