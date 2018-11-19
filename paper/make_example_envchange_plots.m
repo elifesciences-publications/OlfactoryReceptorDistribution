@@ -52,11 +52,14 @@ fig.Position = [fig.Position(1:2) 5.8 2];
 
 fig.Color = [1 1 1];
 
+distChangeColors = {hex2color('2D75BB'), hex2color('EE8434')};
+
 % show change at low SNR
 ax1 = axes;
 ax1.Units = 'normalized';
 ax1.OuterPosition = [1/2 0 1/2 1];
-plotDistChange(K1(:, 1), K2(:, 1), 'beautifyopts', {'fontscale', 0.667});
+plotDistChange(K1(:, 1), K2(:, 1), 'colors', distChangeColors, ...
+    'beautifyopts', {'fontscale', 0.667});
 ylim([0 0.08]);
 title('Low SNR');
 
@@ -66,7 +69,8 @@ beautifygraph('fontscale', 0.667, 'ticksize', 12, 'linewidth', 0.5);
 ax2 = axes;
 ax2.Units = 'normalized';
 ax2.OuterPosition = [0 0 1/2 1];
-plotDistChange(K1(:, 2), K2(:, 2), 'beautifyopts', {'fontscale', 0.667});
+plotDistChange(K1(:, 2), K2(:, 2), 'colors', distChangeColors, ...
+    'beautifyopts', {'fontscale', 0.667});
 ylim([0 0.08]);
 title('High SNR');
 
