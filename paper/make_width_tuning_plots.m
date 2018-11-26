@@ -123,10 +123,15 @@ crt_diag_invQ = diag(crt_invQ);
 approx_const = crt_Ktot/n_receptors + mean(crt_diag_invQ);
 % show the dependence between the diagonal of the inverse overlap matrix
 % and the optimal receptor counts
-[~, ~, h] = scatterfit(crt_diag_invQ, crt_K, ...
-    'scatteropts', {'color', [0.176, 0.459, 0.733], 'size', 60, 'filled', true}, ...
-    'fitopts', {'line', [-1, approx_const], 'style', {'k--', 'linewidth', 1}, ...
-    'legend', false});
+hold on;
+drawfitline(crt_diag_invQ, crt_K, 'line', [-1, approx_const], ...
+    'style', {'k--', 'linewidth', 1}, 'legend', false);
+h = smartscatter(crt_diag_invQ, crt_K, 'color', [0.176, 0.459, 0.733], ...
+    'size', 60, 'filled', true);
+% [~, ~, h] = scatterfit(crt_diag_invQ, crt_K, ...
+%     'scatteropts', {'color', [0.176, 0.459, 0.733], 'size', 60, 'filled', true}, ...
+%     'fitopts', {'line', [-1, approx_const], 'style', {'k--', 'linewidth', 1}, ...
+%     'legend', false});
 % add a thin edge around the data points
 h.hscatter.MarkerEdgeColor = [1 1 1];
 
@@ -144,7 +149,8 @@ xlabel('(Q^{-1})_{aa}');
 ylabel('K_a');
 
 % beautify, making sure fonts aren't too big
-beautifygraph('fontscale', 0.667, 'linewidth', 0.5, 'minorticks', 'off');
+beautifygraph('fontscale', 0.667, 'linewidth', 0.5, 'minorticks', 'off', ...
+    'ticksize', 10);
 
 % adjust figure for printing
 preparegraph;
@@ -190,9 +196,56 @@ xlabel('(Q^{-1})_{aa}');
 ylabel('K_a');
 
 % beautify, making sure fonts aren't too big
-beautifygraph('fontscale', 0.667, 'linewidth', 0.5);
+beautifygraph('fontscale', 0.667, 'linewidth', 0.5, 'ticksize', 10);
 
 % adjust figure for printing
 preparegraph;
 
-% safe_print(fullfile('figs', 'K_vs_invQ.pdf'));
+%% What happens with the SNR as we increase tuning?
+
+% calculate SNR
+% all_snr = cellfun(@(Q) sqrt(Ktot*trace(Q)), results.outputs.Q);
+all_snr = cellfun(@(Q) sqrt(trace(Q)/size(Q, 1)), results.outputs.Q);
+mean_snr = mean(all_snr, 1);
+lo_snr = quantile(all_snr, 0.2, 1);
+hi_snr = quantile(all_snr, 0.8, 1);
+
+% make the figure
+fig = figure;
+fig.Units = 'inches';
+fig.Position(3:4) = [3 2];
+
+fig.Color = [1 1 1];
+
+% set some colors
+color_uncertainty = [0.9 0.9 0.9];
+color_mean = [0.737 0.180 0.172];
+
+hold on;
+% draw the uncertainty area
+fill([flipud(tuning_values(:)) ; tuning_values(:)], ...
+     [flipud(lo_snr(:, :, 1)') ; hi_snr(:, :, 1)'], ...
+     color_uncertainty, 'linestyle', 'none');
+% draw the mean
+plot(tuning_values, mean_snr(:, :, 1), 'color', color_mean, 'linewidth', 1);
+
+all_n_expressed = cellfun(@(K) sum(K > 1e-3), results.outputs.K);
+mean_n_expressed = mean(all_n_expressed, 1);
+lo_n_expressed = quantile(all_n_expressed, 0.2, 1);
+hi_n_expressed = quantile(all_n_expressed, 0.8, 1);
+
+xlabel('Tuning width');
+ylabel('SNR');
+
+beautifygraph('fontscale', 0.667, 'linewidth', 0.5, 'ticksize', 10);
+preparegraph;
+
+figure;
+scatter(all_snr(:), all_n_expressed(:)/n_receptors, 'filled', 'markeredgealpha', 0.2, ...
+    'markerfacealpha', 0.2);
+% plot(mean_snr(:, :, 1), mean_n_expressed(:, :, 1), 'color', color_mean, 'linewidth', 1);
+xlabel('SNR');
+ylabel('Fraction of expressed receptors');
+
+beautifygraph;
+preparegraph;
