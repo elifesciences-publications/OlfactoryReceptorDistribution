@@ -38,9 +38,9 @@ function [K, info_values, Q, info_fct] = calculate_optimal_dist(S, Gamma, Ktot_v
 %    'lagstart'
 %       Initial value to use for Laagrange multiplier optimization.
 %    'sumtol'
-%       Tolerance for value of sum(K) in the optimal distribution. If the
-%       difference between the sum of receptor numbers and the total number
-%       Ktot is larger than this tolerance, an error is issued.
+%       Tolerance for value of sum(K)/Ktot in the optimal distribution. If
+%       the difference between the sum of receptor numbers and the total
+%       number Ktot is larger than this tolerance, an error is issued.
 %
 %   See also: fmincon, optimoptions.
 
@@ -54,7 +54,7 @@ parser.addParameter('method', 'fmincon', @(s) isvector(s) && ischar(s) && ...
 parser.addParameter('optimopts', {}, @(c) (iscell(c) && isvector(c)) || isstruct(c));
 parser.addParameter('lagsearchopts', {}, @(c) (iscell(c) && isvector(c)) || ...
     isstruct(c));
-parser.addParameter('lagstart', 1e-3, @(x) isscalar(x) && isnumeric(x));
+parser.addParameter('lagstart', [], @(x) isscalar(x) && isnumeric(x));
 parser.addParameter('sumtol', 1e-4, @(x) isscalar(x) && isnumeric(x) && x > 0);
 
 if strcmp(S, 'defaults') && nargin == 1
@@ -122,8 +122,13 @@ for i = 1:length(Ktot_values)
             [], ...
             optimopts); %#ok<ASGLU>
     elseif strcmp(params.method, 'lagsearch')
+        if isempty(params.lagstart)
+            lagstart = M / crtK;
+        else
+            lagstart = params.lagstart;
+        end
         lbd_optim = fsolve(@(lbd) ...
-            sum(getKunc(lbd, M, crtK, Q, optimopts)) - crtK, params.lagstart, ...
+            sum(getKunc(lbd, M, crtK, Q, optimopts)) - crtK, lagstart, ...
             lagsearchopts);
         Koptim = getKunc(lbd_optim, M, crtK, Q, optimopts);
     end
@@ -131,13 +136,13 @@ for i = 1:length(Ktot_values)
     Koptim(Koptim < eps) = 0; % eliminate rounding errors
     K(:, i) = Koptim;
     
-    if ~isempty(progress)
-        progress.update(100*i/length(Ktot_values));
-    end
-    
-    if abs(sum(Koptim) - crtK) > params.sumtol
+    if abs(sum(Koptim)/crtK - 1) > params.sumtol
         error([mfilename ':badsum'], 'The total number of receptors did not converge.');
     end
+    
+    if ~isempty(progress)
+        progress.update(100*i/length(Ktot_values));
+    end    
 end
 if ~isempty(progress)
     progress.done('done!');
