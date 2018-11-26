@@ -32,11 +32,13 @@ function [K, info_values, Q, info_fct] = calculate_optimal_dist(S, Gamma, Ktot_v
 %    'optimopts':
 %       Cell array or structure containing options to be passed to fmincon
 %       or fminunc for the optimization of the receptor abundances.
-%    'lagsearchopts':
-%       Cell array or structure containing options to be passed to
-%       fminunc for finding the value of the Lagrange multiplier.
+%    'lagrate'
+%       Learning rate for Lagrange multiplier.
 %    'lagstart'
-%       Initial value to use for Laagrange multiplier optimization.
+%       Initial value to use for Lagrange multiplier optimization.
+%    'lagiter'
+%       Maximum number of iterations for finding Lagrange multiplier. The
+%       search is ended if the 'sumtol' test (see below) passes.
 %    'sumtol'
 %       Tolerance for value of sum(K)/Ktot in the optimal distribution. If
 %       the difference between the sum of receptor numbers and the total
@@ -52,9 +54,9 @@ parser.FunctionName = mfilename;
 parser.addParameter('method', 'fmincon', @(s) isvector(s) && ischar(s) && ...
     ismember(s, {'fmincon', 'lagsearch'}));
 parser.addParameter('optimopts', {}, @(c) (iscell(c) && isvector(c)) || isstruct(c));
-parser.addParameter('lagsearchopts', {}, @(c) (iscell(c) && isvector(c)) || ...
-    isstruct(c));
+parser.addParameter('lagrate', [], @(x) isscalar(x) && isnumeric(x) && x >= 0);
 parser.addParameter('lagstart', [], @(x) isscalar(x) && isnumeric(x));
+parser.addParameter('lagiter', 100, @(x) isscalar(x) && isnumeric(x));
 parser.addParameter('sumtol', 1e-4, @(x) isscalar(x) && isnumeric(x) && x > 0);
 
 if strcmp(S, 'defaults') && nargin == 1
@@ -70,6 +72,8 @@ params = parser.Results;
 % setup
 [M, ~] = size(S);
 Q = S * Gamma * S';
+% make sure Q is symmetric
+Q = (Q + Q')/2;
 K = zeros(M, length(Ktot_values));
 
 % handle options
@@ -91,13 +95,13 @@ else
     optimopts = optimoptions(optimopts, params.optimopts);
 end
 
-lagsearchopts = optimoptions('fsolve');
-lagsearchopts.Display = 'none';
-if iscell(params.lagsearchopts)
-    lagsearchopts = optimoptions(lagsearchopts, params.lagsearchopts{:});
-else
-    lagsearchopts = optimoptions(lagsearchopts, params.lagsearchopts);
-end
+% lagsearchopts = optimoptions('fsolve');
+% lagsearchopts.Display = 'none';
+% if iscell(params.lagsearchopts)
+%     lagsearchopts = optimoptions(lagsearchopts, params.lagsearchopts{:});
+% else
+%     lagsearchopts = optimoptions(lagsearchopts, params.lagsearchopts);
+% end
 
 % perform the optimization
 ident = eye(size(Q));
@@ -114,7 +118,7 @@ for i = 1:length(Ktot_values)
     optimopts.TypicalX = ones(1, M)*(crtK/M);
     if strcmp(params.method, 'fmincon')
         [Koptim, ~, exit_flag, output] = fmincon(...
-            @(Khat) -0.5*log(det(ident + diag(Khat)*Q)), ...
+            @(Khat) -log(det(ident + diag(Khat)*Q)), ...
             ones(1, M)*(crtK/M), ...
             [], [], ...
             ones(1, M), crtK, ...
@@ -122,15 +126,30 @@ for i = 1:length(Ktot_values)
             [], ...
             optimopts); %#ok<ASGLU>
     elseif strcmp(params.method, 'lagsearch')
+        % do a sort of gradient search for the Lagrange multiplier
         if isempty(params.lagstart)
-            lagstart = M / crtK;
+            lbd_optim = M / crtK;
         else
-            lagstart = params.lagstart;
+            lbd_optim = params.lagstart;
         end
-        lbd_optim = fsolve(@(lbd) ...
-            sum(getKunc(lbd, M, crtK, Q, optimopts)) - crtK, lagstart, ...
-            lagsearchopts);
-        Koptim = getKunc(lbd_optim, M, crtK, Q, optimopts);
+        if isempty(params.lagrate)
+            ratelbd = 10/crtK^2;
+        else
+            ratelbd = params.lagrate;
+        end
+        lbdhist = zeros(params.lagiter, 1);
+        for k = 1:params.lagiter
+            lbdhist(k) = lbd_optim;
+            crtKoptim = getKunc(lbd_optim, M, crtK, Q, optimopts);
+            derlbd = ratelbd*(sum(crtKoptim) - crtK);
+            if abs(sum(crtKoptim)/crtK - 1) <= params.sumtol
+                % convergence
+                break;
+            end
+            lbd_optim = lbd_optim + derlbd;
+        end
+        Koptim = crtKoptim;
+%         Koptim = getKunc(lbd_optim, M, crtK, Q, optimopts);
     end
 
     Koptim(Koptim < eps) = 0; % eliminate rounding errors
@@ -166,21 +185,27 @@ function Kunc = getKunc(lbd, M, Ktot, Q, optimopts)
 
 ident = eye(size(Q));
 
+%     function [I, dI] = neg_info_fct(sqrtKvals)
+%         Kvals = sqrtKvals(:).^2;
+%         shrunk = ident + diag(Kvals)*Q;
+%         I = 0.5*lbd*sum(Kvals) - 0.5*log(det(shrunk));
+%         dI = 2*sqrtKvals(:).*(lbd - diag(Q/shrunk)); % XXX why no 0.5 here?!
+%     end
+
     function [I, dI] = neg_info_fct(sqrtKvals)
         Kvals = sqrtKvals(:).^2;
-        shrunk = ident + diag(Kvals)*Q;
-        I = 0.5*lbd*sum(Kvals) - 0.5*log(det(shrunk));
-%         dI = Kvals.*(lbd - diag(Q/shrunk));
-        dI = 2*sqrtKvals(:).*(lbd - diag(Q/shrunk));
+        % the following is the same as diag(Kvals)*Q
+        KQ = bsxfun(@times, Q, Kvals);
+        kqEvals = eig(KQ);
+        % not including the 1/2 factor
+        I = lbd*sum(Kvals) - sum(log1p(kqEvals));
+        Qratio = Q/(ident + KQ);
+        dI = 2*sqrtKvals(:).*(lbd - diag(Qratio));
+%         ddI = -4*(sqrtKvals(:)*sqrtKvals(:)') .* Qratio .* Qratio';
     end
 
-% info_fct = @(logKvals) 0.5*log(det(ident + diag(exp(logKvals))*Q)) ...
-%     - 0.5*lbd*sum(exp(logKvals));
-% [logKoptim, info_value, exit_flag, output] = fminunc(@neg_info_fct, ...
-%     log(ones(1, M)*(Ktot/M)), optimopts); %#ok<ASGLU>
-% Kunc = exp(logKoptim);
-[sqrtKoptim, info_value, exit_flag, output] = fminunc(@neg_info_fct, ...
-    sqrt(ones(1, M)*(Ktot/M)), optimopts); %#ok<ASGLU>
+[sqrtKoptim, ~, ~, ~] = fminunc(@neg_info_fct, ...
+    sqrt(ones(1, M)*(Ktot/M)), optimopts);
 Kunc = sqrtKoptim.^2;
 
 % disp(['lbd=' num2str(lbd) ', sum(K)=' num2str(sum(Kunc))]);
