@@ -47,6 +47,9 @@ function [K, info_values, Q, info_fct] = calculate_optimal_dist(S, Gamma, Ktot_v
 %    'lagratefactor'
 %       Factor by which the learning rate for the Lagrange multiplier gets
 %       multiplied when the difference `sum(K) - Ktot` changes sign.
+%    'lagmaxratio'
+%       Maximum ratio by which the Lagrange multiplier can increase or
+%       decrease in one step.
 %    'sumtol'
 %       Tolerance for value of sum(K)/Ktot in the optimal distribution. If
 %       the difference between the sum of receptor numbers and the total
@@ -67,6 +70,7 @@ parser.addParameter('lagstart', [], @(x) isscalar(x) && isnumeric(x));
 parser.addParameter('lagiter', 100, @(x) isscalar(x) && isnumeric(x));
 parser.addParameter('lagrateadapt', true, @(b) islogical(b) && isscalar(b));
 parser.addParameter('lagratefactor', 0.75, @(x) isscalar(x) && isnumeric(x) && x > 0 && x <= 1);
+parser.addParameter('lagmaxratio', 10, @(x) isscalar(x) && isnumeric(x) && x > 1);
 parser.addParameter('sumtol', 1e-4, @(x) isscalar(x) && isnumeric(x) && x > 0);
 
 if strcmp(S, 'defaults') && nargin == 1
@@ -157,7 +161,13 @@ for i = 1:length(Ktot_values)
                 % convergence
                 break;
             end
+            old_lbd_optim = lbd_optim;
             lbd_optim = max(lbd_optim + derlbd, 0);
+            if lbd_optim / old_lbd_optim > params.lagmaxratio
+                lbd_optim = old_lbd_optim*params.lagmaxratio;
+            elseif old_lbd_optim / lbd_optim > params.lagmaxratio
+                lbd_optim = old_lbd_optim/params.lagmaxratio;
+            end
             crt_sign = sign(sum(crtKoptim) - crtK);
             if ~isempty(last_sign) && crt_sign ~= last_sign
                 ratelbd = ratelbd * params.lagratefactor;
