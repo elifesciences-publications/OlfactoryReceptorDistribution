@@ -39,6 +39,14 @@ function [K, info_values, Q, info_fct] = calculate_optimal_dist(S, Gamma, Ktot_v
 %    'lagiter'
 %       Maximum number of iterations for finding Lagrange multiplier. The
 %       search is ended if the 'sumtol' test (see below) passes.
+%    'lagrateadapt'
+%       Set to `true` to use an adaptive learning rate for the Lagrange
+%       multiplier. The learning rate gets decreased (by multiplying by the
+%       `lagratefactor`; see below) every time the difference
+%       `sum(K) - Ktot` changes sign.
+%    'lagratefactor'
+%       Factor by which the learning rate for the Lagrange multiplier gets
+%       multiplied when the difference `sum(K) - Ktot` changes sign.
 %    'sumtol'
 %       Tolerance for value of sum(K)/Ktot in the optimal distribution. If
 %       the difference between the sum of receptor numbers and the total
@@ -57,6 +65,8 @@ parser.addParameter('optimopts', {}, @(c) (iscell(c) && isvector(c)) || isstruct
 parser.addParameter('lagrate', [], @(x) isscalar(x) && isnumeric(x) && x >= 0);
 parser.addParameter('lagstart', [], @(x) isscalar(x) && isnumeric(x));
 parser.addParameter('lagiter', 100, @(x) isscalar(x) && isnumeric(x));
+parser.addParameter('lagrateadapt', true, @(b) islogical(b) && isscalar(b));
+parser.addParameter('lagratefactor', 0.75, @(x) isscalar(x) && isnumeric(x) && x > 0 && x <= 1);
 parser.addParameter('sumtol', 1e-4, @(x) isscalar(x) && isnumeric(x) && x > 0);
 
 if strcmp(S, 'defaults') && nargin == 1
@@ -138,6 +148,7 @@ for i = 1:length(Ktot_values)
             ratelbd = params.lagrate;
         end
         lbdhist = zeros(params.lagiter, 1);
+        last_sign = [];
         for k = 1:params.lagiter
             lbdhist(k) = lbd_optim;
             crtKoptim = getKunc(lbd_optim, M, crtK, Q, optimopts);
@@ -146,7 +157,12 @@ for i = 1:length(Ktot_values)
                 % convergence
                 break;
             end
-            lbd_optim = lbd_optim + derlbd;
+            lbd_optim = max(lbd_optim + derlbd, 0);
+            crt_sign = sign(sum(crtKoptim) - crtK);
+            if ~isempty(last_sign) && crt_sign ~= last_sign
+                ratelbd = ratelbd * params.lagratefactor;
+            end
+            last_sign = crt_sign;
         end
         Koptim = crtKoptim;
 %         Koptim = getKunc(lbd_optim, M, crtK, Q, optimopts);
