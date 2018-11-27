@@ -1,5 +1,5 @@
 % Analyze how robust the optimal receptor distribution is to removing
-% receptor or odorants.
+% receptors.
 %
 % This script's behavior can be modified by defining some variables before
 % running. When these variables are not defined, default values are used.
@@ -251,7 +251,7 @@ rng(9103);
 corr_values = zeros(length(receptor_fractions), n_samples_frac);
 
 progress = TextProgress('generating receptor fraction results', ...
-    'suffix', ['frac=0 (0/' int2str(length(receptor_fractions)) ' sample 0/' ...
+    'suffix', ['frac=0 (0/' int2str(length(receptor_fractions)) ') sample 0/' ...
     int2str(n_samples_frac)]);
 progress_total = n_samples_frac * length(receptor_fractions);
 n_tries = 6;
