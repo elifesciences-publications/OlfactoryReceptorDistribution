@@ -194,7 +194,7 @@ if ~isempty(progress)
 end
 
 % don't calculate the information values if they're never used
-if nargin > 1
+if nargout > 1
     info_values = zeros(1, length(Ktot_values));
     info_fct = @(Kvals) 0.5*log(det(ident + diag(Kvals)*Q));
     
