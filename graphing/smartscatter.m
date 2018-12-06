@@ -106,6 +106,9 @@ mask = isfinite(x) & isfinite(y);
 x = x(mask);
 y = y(mask);
 
+% update number of samples in input
+n = length(x);
+
 % handle defaults
 if isempty(params.kernelscale)
     % automatic kernel scale, as a fraction of the data range
