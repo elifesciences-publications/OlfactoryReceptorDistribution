@@ -201,7 +201,104 @@ beautifygraph('fontscale', 0.667, 'linewidth', 0.5, 'ticksize', 10);
 % adjust figure for printing
 preparegraph;
 
-%% What happens with the SNR as we increase tuning?
+%% Make plots showing how well we can predict \Delta K
+
+% choose the same axis limits for both plots
+tuning_min_max = [min(tuning_values) max(tuning_values)];
+fixed_y_lim = [-0.1 1];
+
+% set some colors
+color_uncertainty = [0.9 0.9 0.9];
+color_mean = [0.737 0.180 0.172];
+
+% make the figure
+fig = figure;
+fig.Units = 'inches';
+fig.Position = [fig.Position(1:2) 3.5 1.3];
+
+% make the axes for the first plot -- K vs. log diag(Q)
+ax = axes;
+ax.OuterPosition = [0 0 0.5 1];
+
+% draw the uncertainty area
+fill([flipud(tuning_values(:)) ; tuning_values(:)], ...
+     [flipud(results.summaries.diff_log_diagQ.cp_low(:, :, 1)') ; ...
+             results.summaries.diff_log_diagQ.cp_high(:, :, 1)'], ...
+     color_uncertainty, 'linestyle', 'none');
+hold on;
+% draw the mean
+plot(tuning_values, results.summaries.diff_log_diagQ.cp_mean(:, :, 1), ...
+    'color', color_mean, 'linewidth', 1);
+
+% adjust the axes limits
+xlim(tuning_min_max);
+ylim(fixed_y_lim);
+
+% switch to log space on x axis and adjust the ticks
+set(ax, 'xtick', tuning_min_max, ...
+    'xticklabel', {[num2str(tuning_min_max(1)) ' (narrow)'], ...
+                   [num2str(tuning_min_max(2)) ' (wide)']}, ...
+    'xscale', 'log');
+
+% don't waste ink on the axes
+ax.LineWidth = 0.5;
+
+% label the axes
+xlabel('receptor tuning');
+ylabel('corr(\Deltalog Q_{aa}, \DeltaK_a)');
+
+% plot the 0 correlation line as a visual guide
+plot(xlim, [0 0], 'k:');
+
+% beautify, making sure fonts aren't too big, and axes don't waste ink
+beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5);
+
+% make the ticks a bit bigger
+ax.TickLength = 2*ax.TickLength;
+
+% make the axes for the first plot -- K vs. -diag(inv(Q))
+ax = axes;
+ax.OuterPosition = [0.5 0 0.5 1];
+
+% draw the uncertainty area
+fill([flipud(tuning_values(:)) ; tuning_values(:)], ...
+    -[flipud(results.summaries.diff_log_diag_invQ.cp_low(:, :, 1)') ; ...
+             results.summaries.diff_log_diag_invQ.cp_high(:, :, 1)'], ...
+     color_uncertainty, 'linestyle', 'none');
+hold on;
+% draw the mean
+plot(tuning_values, -results.summaries.diff_log_diag_invQ.cp_mean(:, :, 1), ...
+    'color', color_mean, 'linewidth', 1);
+
+% adjust the axes limits
+xlim(tuning_min_max);
+ylim(fixed_y_lim);
+
+% switch to log space on x axis and adjust the ticks
+set(ax, 'xtick', tuning_min_max, ...
+    'xticklabel', {[num2str(tuning_min_max(1)) ' (narrow)'], ...
+                   [num2str(tuning_min_max(2)) ' (wide)']}, ...
+    'xscale', 'log');
+
+% label the axes
+xlabel('receptor tuning');
+ylabel('corr(-\Deltalog Q^{-1}_{aa}, \DeltaK_a)');
+
+% plot the 0 correlation line as a visual guide
+plot(xlim, [0 0], 'k:');
+
+% beautify, making sure fonts aren't too big, and axes don't waste ink
+beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5);
+
+% make the ticks a bit bigger
+ax.TickLength = 2*ax.TickLength;
+
+% adjust figure for printing
+preparegraph;
+
+safeprint(fullfile('figs', 'diff_logic_vs_tuning.pdf'));
+
+%% What happens with the SNR as we increase tuning width?
 
 % calculate SNR
 % all_snr = cellfun(@(Q) sqrt(Ktot*trace(Q)), results.outputs.Q);
