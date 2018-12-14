@@ -248,7 +248,11 @@ preparegraph('edge', 0);
 % keep this reproducible
 rng(9103);
 
+% correlation values for the receptor abundances themselves
 corr_values = zeros(length(receptor_fractions), n_samples_frac);
+
+% correlation values for the *change* in receptor abundances
+corr_diff_values = zeros(length(receptor_fractions), n_samples_frac);
 
 progress = TextProgress('generating receptor fraction results', ...
     'suffix', ['frac=0 (0/' int2str(length(receptor_fractions)) ') sample 0/' ...
@@ -269,13 +273,16 @@ for j = 1:length(receptor_fractions)
         % sometimes the optimization does not converge
         % try to repeat the simulation if it does not
         for k = 1:n_tries
-            % choose a random environment
+            % choose two random environments
             crtGamma = 0.01*generate_environment('rnd_corr', size(S, 2), ...
+                'corr_beta', corr_beta);
+            crtGamma_diff = 0.01*generate_environment('rnd_corr', size(S, 2), ...
                 'corr_beta', corr_beta);
             
             % find full receptor distribution
             try
                 crtK0 = calculate_optimal_dist(S, crtGamma, Ktot, optim_args{:});
+                crtK0_diff = calculate_optimal_dist(S, crtGamma_diff, Ktot, optim_args{:});
                 worked = true;
             catch
                 worked = false;
@@ -290,6 +297,8 @@ for j = 1:length(receptor_fractions)
                 try
                     crtKred = calculate_optimal_dist(Sred, crtGamma, Ktot_red, ...
                         optim_args{:}, 'lagrate', 2e-3);
+                    crtKred_diff = calculate_optimal_dist(Sred, crtGamma_diff, Ktot_red, ...
+                        optim_args{:}, 'lagrate', 2e-3);
                     worked = true;
                 catch
                     worked = false;
@@ -303,11 +312,16 @@ for j = 1:length(receptor_fractions)
             error(['Failed convergence after ' int2str(n_tries) ' tries.']);
         end
         
-        % calculate version of K0 with the receptors removed
+        % calculate version of K0 and K0_diff with the receptors removed
         crtK0red = crtK0(idxs_kept);
+        crtK0_diff_red = crtK0_diff(idxs_kept);
         
-        % calculate correlation
+        change0 = crtK0_diff_red - crtK0red;
+        change_red = crtKred_diff - crtKred;
+        
+        % calculate correlations
         corr_values(j, i) = corr(crtK0red, crtKred);
+        corr_diff_values(j, i) = corr(change0, change_red);
     end
 end
 progress.done('done!');
@@ -338,23 +352,53 @@ hold on;
 % draw the mean
 plot(actual_fractions, corr_mean, 'color', color_mean, 'linewidth', 1);
 
-% adjust the axes limits
-% xlim(tuning_min_max);
-% ylim(fixed_y_lim);
-
-% switch to log space on x axis and adjust the ticks
-% set(ax, 'xtick', tuning_min_max, ...
-%     'xticklabel', {[num2str(tuning_min_max(1)) ' (narrow)'], ...
-%                    [num2str(tuning_min_max(2)) ' (wide)']}, ...
-%     'xscale', 'log');
-
 % label the axes
-% xlabel('receptor tuning');
-% ylabel('corr(log Q_{aa}, K_a)');
+xlabel('fraction of receptors removed');
+ylabel('correlation of abundances');
 
 % plot the 0 correlation line as a visual guide
 plot(xlim, [0 0], 'k:');
-ylim([0 inf]);
+ylim([0 1]);
+
+% beautify, making sure fonts aren't too big, and axes don't waste ink
+beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5);
+
+% make the ticks a bit bigger
+% ax.TickLength = 2*ax.TickLength;
+
+%% Plot results of removing a fraction of receptors on abundance change
+
+% find summary statistics for the correlations
+corr_diff_low = quantile(corr_diff_values, 0.2, 2);
+corr_diff_high = quantile(corr_diff_values, 0.8, 2);
+corr_diff_mean = nanmean(corr_diff_values, 2);
+
+% set some colors
+color_uncertainty = [0.9 0.9 0.9];
+color_mean = [0.737 0.180 0.172];
+
+% make the figure
+fig = figure;
+fig.Units = 'inches';
+fig.Color = [1 1 1];
+fig.Position(3:4) = [3 2];
+
+% draw the uncertainty area
+actual_fractions = round(receptor_fractions*size(S, 1))/size(S, 1);
+fill([flipud(actual_fractions(:)) ; actual_fractions(:)], ...
+     [flipud(corr_diff_low(:)) ; corr_diff_high(:)], ...
+     color_uncertainty, 'linestyle', 'none');
+hold on;
+% draw the mean
+plot(actual_fractions, corr_diff_mean, 'color', color_mean, 'linewidth', 1);
+
+% label the axes
+xlabel('fraction of receptors removed');
+ylabel('correlation of abundance changes');
+
+% plot the 0 correlation line as a visual guide
+plot(xlim, [0 0], 'k:');
+ylim([0 1]);
 
 % beautify, making sure fonts aren't too big, and axes don't waste ink
 beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5);
@@ -367,5 +411,5 @@ beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5);
 save(fullfile('save', ['receptor_robustness' postfix]), ...
     'Gamma', 'K0', 'K0red', 'Kred', 'Ktot', 'Q0', 'Q0red', 'S', 'S_choice', ...
     'actual_fractions', 'artif_snr', 'artif_tuning', 'corr_beta', ...
-    'corr_values', 'idx_dropped', 'n_samples', 'n_samples_frac', 'n_tries', ...
-    'optim_args', 'receptor_fractions');
+    'corr_values', 'corr_diff_values', 'idx_dropped', 'n_samples', 'n_samples_frac', ...
+    'n_tries', 'optim_args', 'receptor_fractions');
