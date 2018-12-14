@@ -23,6 +23,8 @@
 %       Vector of receptor tuning values to use.
 %   n_samples:
 %       Number of samples to draw for each tuning width.
+%   postifx:
+%       String to add to file name in which the results are saved.
 
 setdefault('n_odorants', 50);
 setdefault('n_receptors', 24);
@@ -31,6 +33,7 @@ setdefault('Ktot', 4000);
 setdefault('tuning_values', logspace(log10(0.01), log10(0.2), 48));
 setdefault('n_samples', 24);
 setdefault('sensing_snr', 200);
+setdefault('postfix', '');
 
 %% Generate two random environments
 
@@ -50,7 +53,7 @@ results = make_sweep_comparisons(...
 
 %% Save the results
 
-save(fullfile('save', 'tuning_width_sweep.mat'), 'n_odorants', 'n_receptors', ...
+save(fullfile('save', ['tuning_width_sweep' postfix '.mat']), 'n_odorants', 'n_receptors', ...
     'corr_beta', 'Ktot', 'tuning_values', 'n_samples', 'sensing_snr', ...
     'Gamma1', 'Gamma2', 'results');
 
