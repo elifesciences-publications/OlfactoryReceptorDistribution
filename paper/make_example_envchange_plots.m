@@ -196,6 +196,25 @@ preparegraph('edge', 0);
 
 safeprint(fullfile('figs', ['natural_env_change_example' postfix]));
 
+%% ...plot only the low-SNR change
+
+fig = figure;
+fig.Units = 'inches';
+fig.Position(3:4) = [1.4 0.95];
+fig.Color = [1 1 1];
+
+plotDistChange(K1(:, 1), K2(:, 1), 'colors', distChangeColors, ...
+    'beautifyopts', {'fontscale', 0.667});
+ylim([0 yl]);
+ylabel('OSN fraction');
+
+beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5, ...
+        'titlesize', 11, 'labelsize', 10);
+
+preparegraph('edge', 0);
+
+safeprint(fullfile('figs', ['low_snr_env_change_example' postfix]));
+
 %% ...plot the sensing matrix
 
 fig = figure;
