@@ -154,6 +154,8 @@ hold on;
 %     'normalization', 'cdf', 'displaystyle', 'stairs');
 n1 = histcounts(pooled_diff_K_generic(:), K_bins, 'normalization', 'cdf');
 n2 = histcounts(pooled_diff_K_nonoverlapping(:), K_bins, 'normalization', 'cdf');
+% n1 = histcounts(pooled_diff_K_generic(:), K_bins, 'normalization', 'pdf');
+% n2 = histcounts(pooled_diff_K_nonoverlapping(:), K_bins, 'normalization', 'pdf');
 
 h1 = plot(K_bins(1:end-1), n1, 'color', cmap_covmat(end, :), 'linewidth', 1);
 h2 = plot(K_bins(1:end-1), n2, 'color', cmap_covmat(1, :), 'linewidth', 1);
@@ -161,6 +163,7 @@ h2 = plot(K_bins(1:end-1), n2, 'color', cmap_covmat(1, :), 'linewidth', 1);
 % fix axes labels an ranges
 xlabel('|\DeltaK_i|');
 ylabel('CDF');
+% ylabel('PDF');
 
 xlim([0 pooled_K_range]);
 ylim([0 1]);
