@@ -152,21 +152,23 @@ hold on;
 % h2 = histogram(pooled_diff_K_nonoverlapping(:), K_bins, ...
 %     'edgecolor', cmap_covmat(1, :), 'linewidth', 1, ...
 %     'normalization', 'cdf', 'displaystyle', 'stairs');
-n1 = histcounts(pooled_diff_K_generic(:), K_bins, 'normalization', 'cdf');
-n2 = histcounts(pooled_diff_K_nonoverlapping(:), K_bins, 'normalization', 'cdf');
-% n1 = histcounts(pooled_diff_K_generic(:), K_bins, 'normalization', 'pdf');
-% n2 = histcounts(pooled_diff_K_nonoverlapping(:), K_bins, 'normalization', 'pdf');
+% n1 = histcounts(pooled_diff_K_generic(:), K_bins, 'normalization', 'cdf');
+% n2 = histcounts(pooled_diff_K_nonoverlapping(:), K_bins, 'normalization', 'cdf');
+n1 = histcounts(pooled_diff_K_generic(:), K_bins, 'normalization', 'pdf');
+n2 = histcounts(pooled_diff_K_nonoverlapping(:), K_bins, 'normalization', 'pdf');
 
 h1 = plot(K_bins(1:end-1), n1, 'color', cmap_covmat(end, :), 'linewidth', 1);
 h2 = plot(K_bins(1:end-1), n2, 'color', cmap_covmat(1, :), 'linewidth', 1);
 
 % fix axes labels an ranges
 xlabel('|\DeltaK_i|');
-ylabel('CDF');
-% ylabel('PDF');
+% ylabel('CDF');
+ylabel('PDF');
 
-xlim([0 pooled_K_range]);
-ylim([0 1]);
+% xlim([0 pooled_K_range]);
+% ylim([0 1]);
+xlim([0 200]);
+ylim([0 0.03]);
 
 % add a legend
 hl = legend([h1 h2], {'generic', 'non-overlapping'}, 'location', 'southeast');
@@ -188,7 +190,8 @@ rs_p = ranksum(pooled_diff_K_generic, pooled_diff_K_nonoverlapping, ...
 disp(['KS test p = ' num2str(ks_p, '%g') '.']);
 disp(['Wilcoxon rank sum test p = ' num2str(rs_p, '%g') '.']);
 
-safeprint(fullfile('figs', 'deltaK_cdf_generic_vs_nonoverlapping'));
+% safeprint(fullfile('figs', 'deltaK_cdf_generic_vs_nonoverlapping'));
+safeprint(fullfile('figs', 'deltaK_pdf_generic_vs_nonoverlapping'));
 
 %% Load tuning results
 
