@@ -49,8 +49,8 @@ set(ax, 'xtick', tuning_min_max, ...
 ax.LineWidth = 0.5;
 
 % label the axes
-xlabel('receptor tuning');
-ylabel('corr(log Q_{aa}, K_a)');
+xlabel('receptor tuning width');
+ylabel('corr(log Q_{aa}/\sigma_a^2, K_a)');
 
 % plot the 0 correlation line as a visual guide
 plot(xlim, [0 0], 'k:');
@@ -86,8 +86,8 @@ set(ax, 'xtick', tuning_min_max, ...
     'xscale', 'log');
 
 % label the axes
-xlabel('receptor tuning');
-ylabel('corr(-Q^{-1}_{aa}, K_a)');
+xlabel('receptor tuning width');
+ylabel('corr(-\sigma_a^2 Q^{-1}_{aa}, K_a)');
 
 % plot the 0 correlation line as a visual guide
 plot(xlim, [0 0], 'k:');
@@ -244,14 +244,14 @@ set(ax, 'xtick', tuning_min_max, ...
 ax.LineWidth = 0.5;
 
 % label the axes
-xlabel('receptor tuning');
-ylabel('corr(\Deltalog Q_{aa}, \DeltaK_a)');
+xlabel('receptor tuning width');
+ylabel('corr(\Deltalog Q_{aa}/\sigma_a^2, \DeltaK_a)');
 
 % plot the 0 correlation line as a visual guide
 plot(xlim, [0 0], 'k:');
 
 % beautify, making sure fonts aren't too big, and axes don't waste ink
-beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5);
+beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5, 'labelsize', 10);
 
 % make the ticks a bit bigger
 ax.TickLength = 2*ax.TickLength;
@@ -281,14 +281,14 @@ set(ax, 'xtick', tuning_min_max, ...
     'xscale', 'log');
 
 % label the axes
-xlabel('receptor tuning');
-ylabel('corr(-\Deltalog Q^{-1}_{aa}, \DeltaK_a)');
+xlabel('receptor tuning width');
+ylabel('corr(-\Deltalog \sigma_a^2Q^{-1}_{aa}, \DeltaK_a)');
 
 % plot the 0 correlation line as a visual guide
 plot(xlim, [0 0], 'k:');
 
 % beautify, making sure fonts aren't too big, and axes don't waste ink
-beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5);
+beautifygraph('fontscale', 0.667, 'ticksize', 10, 'linewidth', 0.5, 'labelsize', 10);
 
 % make the ticks a bit bigger
 ax.TickLength = 2*ax.TickLength;
