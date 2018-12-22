@@ -64,31 +64,32 @@ opts = {'fitopts', {'legend', false, 'style', {'--', 'color', [0.7 0.7 0.7], 'li
     'scatteropts', {'color', hex2color('BC2E2C'), 'alpha', 1}};
 
 mask = isfinite(animal_data.OlfactorySurface);
-x_values = animal_data.OlfactorySurface(mask) ./ animal_data.Mass(mask).^(2/3);
-% x_values = animal_data.OlfactorySurface(mask) ./ animal_data.Mass(mask);
+% x_values = animal_data.OlfactorySurface(mask) ./ animal_data.Mass(mask).^(2/3);
+x_values = animal_data.OlfactorySurface(mask) ./ animal_data.Mass(mask);
 y_values = animal_data.M(mask);
 names = animal_data.Name(mask);
 
 scatterfit(x_values, y_values, opts{:});
-xlabel('area_{epithelium} / mass^{2/3}');
+xlabel('area_{epithelium} / mass');
 ylabel('# intact OR genes');
 
 ylim([300, 1300]);
-xlim([0 16]);
+xlim([-2 50]);
 
 for i = 1:length(names)
-    shift_x = 0.7;
+    shift_x = 1.5;
     shift_y = 0;
     switch names{i}
         case 'guinea pig'
-            shift_y = 60;
-        case 'mouse'
-            shift_x = -4;
+            shift_y = 120;
+            shift_x = 0.8;
         case 'human'
-            shift_x = 0.3;
+            shift_x = 0.7;
             shift_y = 80;
+        case 'dog'
+            shift_y = -30;
         case 'marmoset'
-            shift_x = 0.5;
+            shift_y = -10;
     end
     text(x_values(i) + shift_x, y_values(i) + shift_y, names{i}, 'fontsize', 8);
 end
