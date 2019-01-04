@@ -39,11 +39,16 @@ animal_data.M(strcmp(animal_data.Name, 'human')) = 396;
 animal_data.M(strcmp(animal_data.Name, 'rat')) = 1207;
 animal_data.M(strcmp(animal_data.Name, 'mouse')) = 1130;
 animal_data.M(strcmp(animal_data.Name, 'marmoset')) = 366;
+% more numbers of OR genes from Hughes et al. (2018)
+animal_data.M(strcmp(animal_data.Name, 'cat')) = 856;
+animal_data.M(strcmp(animal_data.Name, 'sheep')) = 962;
 
 % set the masses (in kg)
-% guinea pig, human from Rousseeuw, P.J. & Leroy, A.M. (1987) Robust Regression and Outlier Detection. Wiley, p. 57.
+% guinea pig, human, sheep, and cat from Rousseeuw, P.J. & Leroy, A.M. (1987) Robust Regression and Outlier Detection. Wiley, p. 57.
 animal_data.Mass(strcmp(animal_data.Name, 'guinea pig')) = 1.04;
 animal_data.Mass(strcmp(animal_data.Name, 'human')) = 62;
+animal_data.Mass(strcmp(animal_data.Name, 'sheep')) = 55.5;
+animal_data.Mass(strcmp(animal_data.Name, 'cat')) = 3.3;
 % German shepherd from FEDERATION CYNOLOGIQUE INTERNATIONALE (AISBL)
 % (http://www.fci.be/Nomenclature/Standards/166g01-en.pdf)
 animal_data.Mass(strcmp(animal_data.Name, 'dog')) = 30.0; % German shepherd
@@ -65,34 +70,31 @@ opts = {'fitopts', {'legend', false, 'style', {'--', 'color', [0.7 0.7 0.7], 'li
 
 mask = isfinite(animal_data.OlfactorySurface);
 % x_values = animal_data.OlfactorySurface(mask) ./ animal_data.Mass(mask).^(2/3);
-x_values = animal_data.OlfactorySurface(mask) ./ animal_data.Mass(mask);
+% x_values = animal_data.OlfactorySurface(mask) ./ animal_data.Mass(mask);
+% x_values = log10(animal_data.OlfactorySurface(mask) ./ animal_data.Mass(mask).^0.3);
+x_values = log10(animal_data.OlfactorySurface(mask) ./ animal_data.Mass(mask).^0.2);
 y_values = animal_data.M(mask);
 names = animal_data.Name(mask);
 
 scatterfit(x_values, y_values, opts{:});
-xlabel('area_{epithelium} / mass');
+xlabel('area_{epithelium} / mass^{0.2}');
 ylabel('# intact OR genes');
 
-ylim([300, 1300]);
-xlim([-2 50]);
+ylim([250, 1300]);
+xlim([-0.3 2.0]);
 
 for i = 1:length(names)
-    shift_x = 1.5;
-    shift_y = 0;
+    shift_x = 0.06;
+    shift_y = 10;
     switch names{i}
-        case 'guinea pig'
-            shift_y = 120;
-            shift_x = 0.8;
-        case 'human'
-            shift_x = 0.7;
-            shift_y = 80;
-        case 'dog'
-            shift_y = -30;
         case 'marmoset'
-            shift_y = -10;
+            shift_x = 0.04;
+            shift_y = -60;
     end
     text(x_values(i) + shift_x, y_values(i) + shift_y, names{i}, 'fontsize', 8);
 end
+
+set(gca, 'xtick', [0 1 2], 'xticklabel', {'1', '10', '100'});
 
 beautifygraph('linewidth', 0.5, 'minorticks', 'off', 'fontscale', 0.667, 'ticksize', 12);
 preparegraph;
