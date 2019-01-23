@@ -47,6 +47,10 @@
 %       Parameter to use for generating the background environment matrices.
 %   n_samples:
 %       Number of environment samples to consider.
+%   env_scaling:
+%       Factor by which to scale the generated environment covariance
+%       matrix. Scaling Ktot by the inverse of this factor leaves the
+%       information optimum unchanged.
 
 %% Setup
 
@@ -54,9 +58,10 @@ setdefault('S_choice', 'fly');
 setdefault('S_size', [24, 110]);
 setdefault('artif_tuning', [0.2 0.8]);
 setdefault('artif_snr', 200);
-setdefault('Ktot', 2);
+setdefault('Ktot', 2000);
 setdefault('corr_beta', 8);
 setdefault('n_samples', 100);
+setdefault('env_scaling', 1e-3);
 
 %% Preprocess some options
 
@@ -153,8 +158,8 @@ progress = TextProgress('generating samples');
 for i = 1:n_samples
     for j = 1:n_tries
         % generate two environments (the "contexts")
-        Gamma1 = generate_environment('rnd_corr', size(S, 2), 'corr_beta', corr_beta);
-        Gamma2 = generate_environment('rnd_corr', size(S, 2), 'corr_beta', corr_beta);
+        Gamma1 = env_scaling*generate_environment('rnd_corr', size(S, 2), 'corr_beta', corr_beta);
+        Gamma2 = env_scaling*generate_environment('rnd_corr', size(S, 2), 'corr_beta', corr_beta);
         
         % make sure matrices are symmetric
         Gamma1 = 0.5*(Gamma1 + Gamma1');
