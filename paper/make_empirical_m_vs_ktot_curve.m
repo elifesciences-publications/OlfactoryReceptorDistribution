@@ -86,12 +86,24 @@ xlim([-0.3 2.0]);
 for i = 1:length(names)
     shift_x = 0.06;
     shift_y = 10;
-    switch names{i}
-        case 'marmoset'
-            shift_x = 0.04;
-            shift_y = -60;
+    if ~strcmp(names{i}, 'dog')
+        switch names{i}
+            case 'marmoset'
+                shift_x = 0.04;
+                shift_y = -60;
+            case 'dog'
+                shift_x = 0;
+                shift_y = -90;
+        end
+        text(x_values(i) + shift_x, y_values(i) + shift_y, names{i}, 'fontsize', 8);
+    else
+        text(x_values(i), y_values(i) - 30, 'German', ...
+            'fontsize', 8, 'horizontalalignment', 'center', ...
+            'verticalalignment', 'top');
+        text(x_values(i), y_values(i) - 150, 'shepherd', ...
+            'fontsize', 8, 'horizontalalignment', 'center', ...
+            'verticalalignment', 'top');
     end
-    text(x_values(i) + shift_x, y_values(i) + shift_y, names{i}, 'fontsize', 8);
 end
 
 set(gca, 'xtick', [0 1 2], 'xticklabel', {'1', '10', '100'});
