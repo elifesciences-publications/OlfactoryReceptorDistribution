@@ -141,6 +141,7 @@ pooled_diff_K_nonoverlapping = abs(flatten(cell2mat(diff_K_nonoverlapping)));
 
 % find a suitable range for the histograms
 pooled_K_range = quantile(pooled_diff_K_generic, 0.95);
+% pooled_K_range = max([pooled_diff_K_generic(:) ; pooled_diff_K_nonoverlapping(:)]);
 
 K_bins = linspace(0, pooled_K_range, 100);
 
@@ -159,6 +160,22 @@ n2 = histcounts(pooled_diff_K_nonoverlapping(:), K_bins, 'normalization', 'pdf')
 
 h1 = plot(K_bins(1:end-1), n1, 'color', cmap_covmat(end, :), 'linewidth', 1);
 h2 = plot(K_bins(1:end-1), n2, 'color', cmap_covmat(1, :), 'linewidth', 1);
+
+threshold = 50;
+x_shift = 3;
+plot([threshold threshold], [0 0.03], 'color', [0.5 0.5 0.5], 'linewidth', 0.5);
+
+generic_y = 0.028;
+text(threshold - 0.5*x_shift, generic_y, [int2str(100*mean(pooled_diff_K_generic <= threshold)) '%<'], ...
+    'color', cmap_covmat(end, :), 'horizontalalignment', 'right');
+text(threshold + x_shift, generic_y, ['>' int2str(100*mean(pooled_diff_K_generic > threshold)) '%'], ...
+    'color', cmap_covmat(end, :), 'horizontalalignment', 'left');
+
+nonovl_y = 0.022;
+text(threshold - 0.5*x_shift, nonovl_y, [int2str(100*mean(pooled_diff_K_nonoverlapping <= threshold)) '%<'], ...
+    'color', cmap_covmat(1, :), 'horizontalalignment', 'right');
+text(threshold + x_shift, nonovl_y, ['>' int2str(100*mean(pooled_diff_K_nonoverlapping > threshold)) '%'], ...
+    'color', cmap_covmat(1, :), 'horizontalalignment', 'left');
 
 % fix axes labels an ranges
 xlabel('|\DeltaK_i|');
@@ -250,7 +267,11 @@ ylim(1.1*yl*[-1, 1]);
 xlabel('Receptor tuning width');
 ylabel('\DeltaK');
 
-beautifygraph('fontscale', 0.667, 'linewidth', 0.5, 'ticksize', 12);
+set(gca, 'xtick', [0.2, 0.4, 0.6], 'xticklabel', {...
+    '[0.2, 0.4]', '[0.4, 0.6]', '[0.6, 0.8]'});
+
+beautifygraph('fontscale', 0.667, 'linewidth', 0.5, 'ticksize', 12, ...
+    'minorticks', 'off');
 preparegraph;
 
 safeprint(fullfile('figs', 'deltaK_vs_tuning'));
