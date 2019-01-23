@@ -5,6 +5,10 @@
 n_receptors = 3;
 n_odorants = 15;
 
+% this parameter allows to trade receptor numbers for per-receptor noise
+noise_scaling = 10;
+% noise_scaling = 1;
+
 %% Choose a sensing matrix with few receptors
 
 sensing_fly = open('data/flyResponsesWithNames.mat');
@@ -20,6 +24,8 @@ rng(912);
 receptor_idxs = randperm(size(S_fly_normalized, 1), n_receptors);
 odorant_idxs = randperm(size(S_fly_normalized, 2), n_odorants);
 % normalize to keep responses in a reasonable range below
+% (note that we could instead of scaled Gamma up by a factor of 10,000 and
+% left S unchanged)
 % S = (1/200) * S_fly_normalized(receptor_idxs, odorant_idxs);
 S = (1/100) * S_fly_normalized(receptor_idxs, odorant_idxs);
 
@@ -91,7 +97,7 @@ preparegraph;
 %% Calculate analytic response covariance matrices for single receptor
 
 % choose noise amounts for receptors
-sigma = 0.1*ones(1, size(S, 1));
+sigma = 0.1*noise_scaling*ones(1, size(S, 1));
 
 Q1 = S*Gamma1*S';
 Q2 = S*Gamma2*S';
@@ -114,9 +120,9 @@ rng(183);
 
 % the OSN numbers K1, K2, K3 are constrained by K1 + K2 + K3 = Ktot
 % we thus have a 2d space of OSN numbers to sweep
-Ktot = 2;
+Ktot = 2*noise_scaling^2;
 % bin the responses for each receptor type
-Kbins = linspace(0.05, Ktot, 11);
+Kbins = linspace(0.05*noise_scaling^2, Ktot, 11);
 
 % store info results in matrices indexed by K1 and K2
 % not all values are valid (since sometimes K1 + K2 > Ktot); the invalid
