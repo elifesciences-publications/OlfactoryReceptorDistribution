@@ -49,7 +49,7 @@ Along with the code, this repository also contains data needed to generate our r
     * we saved all this data in the `data/flyResponsesWithNames.mat` file
     * we confirmed with the authors on Feb. 11, 2019 that we can share our `.mat` file on GitHub
 * human and mouse olfactory receptor affinity data from [Saito et al. (Science signaling, 2009)](http://stke.sciencemag.org/content/2/60/ra9.abstract)
-    * we obtained from the authors the response curves obtained for 62 mouse and human receptors against a panel of odorants at a range of concentration values
+    * we obtained from the authors the response curves for 62 mouse and human receptors against a panel of odorants at a range of concentration values
         * the files were in GraphPad Prism format and we used the trial version of the software to export them to CSV
         * we then used a Python script to parse the data and convert it to a Matlab file, under `data/mouse_receptor_curves.mat`
     * we confirmed with the authors on Jan. 24, 2019 that we can share our `.mat` file on GitHub
