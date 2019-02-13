@@ -37,7 +37,7 @@ Finally, the scripts in `graphing` are utilities that facilitate the production 
 
 ## Data sources
 
-Along with the code, this repository also contains data needed to generate our results. This data was obtained by other groups and was generally lightly processed by us for easier use in Matlab scripts, as described below. We very thankful to the authors for agreeing to allow us to share this data. We emphasize that we are responsible for converting the data from the original formats to Matlab files and thus we are responsible for any errors that might have occurred during this conversion.
+Along with the code, this repository also contains data needed to generate our results. This data was obtained by other groups and was generally lightly processed by us for easier use in Matlab scripts, as described below. We are very thankful to the authors for agreeing to allow us to share this data. We emphasize that we are responsible for converting the data from the original formats to Matlab files and thus we are responsible for any errors that might have occurred during this conversion.
 
 * *Drosophila* olfactory receptor affinity data from [Hallem&Carlson (Cell, 2006)](https://www.sciencedirect.com/science/article/pii/S0092867406003631)
     * we obtained an Excel file of receptor-odorant affinities from the authors, matching Table S1 in the supplementary information of their paper; this file contained the exact firing rate values obtained from the data, without the rounding to integers that occurs in that Table
