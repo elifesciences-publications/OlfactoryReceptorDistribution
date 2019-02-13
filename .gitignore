@@ -1,8 +1,8 @@
 .DS_Store
 *.swp
 *~
-save/
-figs/
+figs/*.pdf
+figs/*.png
 .ipynb_checkpoints
-data/src/
 sandbox/
+save/*.mat
