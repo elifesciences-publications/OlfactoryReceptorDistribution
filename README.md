@@ -1,5 +1,5 @@
 # Adaptation of olfactory receptor abundances for efficient coding
-This repository contains the code for reproducing all the results from the paper. We also share the data necessary for obtaining our results, with many thanks to the authors of Hallem&Carlson (Cell, 2006), Saito *et al.* (Science signaling, 2009), and Ibarra-Soria *et al.* (eLife, 2017) both for collecting the data and for agreeing to share it with us and to allow us to share it on GitHub. More details in the [Data sources](#data-sources) section below.
+This repository contains the code for reproducing all the results from Teşileanu et al., 'Adaptation of olfactory receptor abundances for efficient coding'. eLife, 2019. http://dx.doi.org/10.7554/eLife.39279. We also share the data necessary for obtaining our results, with many thanks to the authors of Hallem&Carlson (Cell, 2006), Saito *et al.* (Science signaling, 2009), and Ibarra-Soria *et al.* (eLife, 2017) both for collecting the data and for agreeing to share it with us and to allow us to share it on GitHub. More details in the [Data sources](#data-sources) section below.
 
 ## Installation
 
